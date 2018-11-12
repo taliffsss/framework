@@ -1,0 +1,8 @@
+[09-Nov-2018 10:39:17 Europe/Berlin] PHP Parse error:  syntax error, unexpected 'exit' (T_EXIT) in D:\local\man\core\libraries\Routes.php on line 52
+[09-Nov-2018 10:41:22 Europe/Berlin] PHP Notice:  Array to string conversion in D:\local\man\core\libraries\Routes.php on line 37
+[09-Nov-2018 10:56:09 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: Too few arguments to function Routes::findRoute(), 0 passed in D:\local\man\core\libraries\Routes.php on line 9 and exactly 2 expected in D:\local\man\core\libraries\Routes.php:44
+Stack trace:
+#0 D:\local\man\core\libraries\Routes.php(9): Routes->findRoute()
+#1 D:\local\man\index.php(43): Routes->__construct()
+#2 {main}
+  thrown in D:\local\man\core\libraries\Routes.php on line 44
