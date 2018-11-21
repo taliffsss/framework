@@ -1,4 +1,5 @@
 <?php
+namespace AIS\libraries;
 
 /**
  * This class can encrypt and decrypt any types you want.

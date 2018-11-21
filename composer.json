@@ -1,0 +1,19 @@
+{
+    "name": "manluz/inhouse-framework",
+    "type": "project",
+    "authors": [
+        {
+            "name": "Mark Anthony Naluz",
+            "email": "anthony.naluz15@gmail.com"
+        }
+    ],
+    "autoload": {
+		"psr-4": {
+			"AIS\\": [
+                "app",
+                "core"
+            ]
+		}
+	},
+    "require": {}
+}

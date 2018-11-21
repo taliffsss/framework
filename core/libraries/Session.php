@@ -1,4 +1,5 @@
 <?php
+namespace AIS\libraries;
 
 /**
  * This class can set or start session and stored session in folder name Sessions 
@@ -9,6 +10,10 @@
  */
 
 class Session {
+
+	function __construct() {
+
+	}
 
 	/**
 	 * Set message to show
@@ -96,24 +101,27 @@ class Session {
 	/**
 	* Set to Start Session
 	*/
-	public function set_session() {
-
+	static function set_session() {
+		Session::save_session();
 		if(!isset($_SESSION)) {
 			session_start();
 		}
+
 	}
 
 	/**
 	* Save Session Path
 	*/
-	public function save_session() {
+	static function save_session() {
 
-		$dirName = "../Sessions/";
+		$dirName = $GLOBALS["config"]["path"]["app"]."sessions";
 
 		if(!is_dir($dirName)) {
 			mkdir($dirName,0755, true);
 		}
-		session_save_path($dirName);
+
+		ini_set("session.save_handler", "files");
+        ini_set("session.save_path", $dirName);
 		
 	}
 }

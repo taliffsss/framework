@@ -3,30 +3,21 @@ namespace AIS\libraries;
 
 class Routes {
 
-	private static $_url = array();
-	private static $_method = array();
+	private $_url = array();
+	private $_method = array();
 
 
-	/**
-	 * Map url and Class store in array
-	 * @param string
-	 * @param string
-	 * @return void
-	 */
-	static function add($uri,$methods) {
+	public function add($uri,$methods) {
 
-		self::$_url[] = $uri;
-		self::$_method[$uri] = $methods;
+		$this->_url[] = $uri;
+		$this->_method[$uri] = $methods;
 
 	}
 
-	/**
-	 * publish a valid url pass thru
-	 */
-	static function _autoload() {
+	public function post() {
 		$route = Routes::findRoute();
 
-		$method = str_replace("::", "/", self::$_method);
+		$method = str_replace("::", "/", $this->_method);
 
 		$dir = scandir($GLOBALS["config"]["path"]["app"].'controllers/');
 
@@ -41,7 +32,7 @@ class Routes {
 
 
 		//check if class are inside in folder
-		if(in_array($myurl, self::$_url)) {
+		if(in_array($myurl, $this->_url)) {
 			foreach ($method as $key => &$value) {
 				if($key == $myurl) {
 					$_m = explode('/', $value);
@@ -61,7 +52,7 @@ class Routes {
 		}
 
 		//check if url and class are existing
-		if(in_array($myurl, self::$_url)) {
+		if(in_array($myurl, $this->_url)) {
 			if(class_exists($myClass)) {
 				$controller = new $myClass();
 				if(method_exists($controller, $myMethod)) {

@@ -1,4 +1,5 @@
 <?php
+namespace AIS\libraries;
 
 /**
  * This class can return, manipulate Url as well as query string
@@ -13,8 +14,8 @@ class Url {
 	/**
 	* Set URL Production or Local Machine
 	*/
-	protected $live = '';
-	protected $local = 'http://localhost:8080/mark';
+	protected $live = $GLOBALS["config"]["domain"]["production"];
+	protected $local = $GLOBALS["config"]["domain"]["development"];
 
 	/**
 	* Set Request Uri

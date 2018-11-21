@@ -1,4 +1,5 @@
 <?php
+namespace AIS\libraries;
 
 /**
  * @package Database Class

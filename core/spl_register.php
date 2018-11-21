@@ -11,16 +11,25 @@ spl_autoload_register(function($class){
 	} elseif (file_exists("{$app}controllers/{$class}.php")) {
 
 		require_once "{$app}controllers/{$class}.php";
+	
+	} elseif (file_exists("app/controllers/admin/{$class}.php")) {
+
+		require_once "app/controllers/admin/{$class}.php";
+		
+	} elseif (file_exists("app/controllers/default/{$class}.php")) {
+
+		require_once "app/controllers/default/{$class}.php";
+		
+	} elseif (file_exists("{$app}models/{$class}.php")) {
+
+		require_once "{$app}models/{$class}.php";
 
 	} elseif (file_exists("{$app}libraries/{$class}.php")) {
 
 		require_once "{$app}libraries/{$class}.php";
 
-	} elseif (file_exists("{$app}models/{$class}.php")) {
-
-		require_once "{$app}models/{$class}.php";
-
 	}
 
 });
 ?>
+		

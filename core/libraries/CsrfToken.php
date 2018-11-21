@@ -1,4 +1,5 @@
-<?php 
+<?php
+namespace AIS\libraries;
 /**
  * @package Database Class
  * @author 	Mark Anthony Naluz <anthony.naluz15@gmail.com>
@@ -12,37 +13,34 @@ class CsrfToken {
 	 *
 	 * @var	random string
 	 */
-	protected $_hash;
+	protected static $_hash;
 	/**
 	 * CSRF Token session name
 	 *
 	 * @var	string
 	 */
-	private $name = 'csrf-token';
+	private static $name = 'csrf-token';
 	/**
 	 * CSRF Token session time name
 	 *
 	 * @var	string
 	 */
-	private $time = 'csrf-time';
-
-	function __construct() {
-		$this->_hash = $this->_csrf_hash();
-		$this->_set_csrf_token();
-	}
+	private static $time = 'csrf-time';
 
 	/**
 	 * Check if CSRF token has been set if not it will generate new CSRF Token
 	 * Stored in session
 	 * @return session data value random string
 	 */
-	public function _set_csrf_token() {
+	static function _set_csrf_token() {
 
-		if(!isset($_SESSION[$this->name])) {
-			$this->_generate_new_hash();
+		self::$_hash = CsrfToken::_csrf_hash();
+
+		if(!isset($_SESSION[self::$name])) {
+			CsrfToken::_generate_new_hash();
 		} else {
 			if($_SERVER['REQUEST_METHOD'] != "POST") {
-				$this->_generate_new_hash();
+				CsrfToken::_generate_new_hash();
 			}
 		}
 	}
@@ -50,9 +48,9 @@ class CsrfToken {
 	/**
 	 * Set hash in Session
 	 */
-	public function _generate_new_hash() {
-		$_SESSION[$this->name] = $this->_hash;
-		$_SESSION[$this->time] = time();
+	public static function _generate_new_hash() {
+		$_SESSION[self::$name] = self::$_hash;
+		$_SESSION[self::$time] = time();
 	}
 
 	/**
@@ -63,7 +61,7 @@ class CsrfToken {
 	public function _csrf_is_valid($key) {
 		if($_SERVER['REQUEST_METHOD'] == 'POST') {
 			if($this->_csrf_time_validity()) {
-				if($_SESSION[$this->name] === $key) {
+				if($_SESSION[self::$name] === $key) {
 					return true;
 				} else {
 					$this->_generate_new_hash();
@@ -77,9 +75,9 @@ class CsrfToken {
 	 * Crypt One-way string hashing
 	 * @return Random String
 	 */
-	private function _csrf_hash() {
+	private static function _csrf_hash() {
 
-		$_crypt = crypt($this->key(), '$2a$07$abulpE26zd/Qxe08b951b786e8e3AM/6KYyAhykKYiwTJyL7aa7f7e5a1390523e44fa9180salt$');
+		$_crypt = crypt(CsrfToken::key(), '$2a$07$abulpE26zd/Qxe08b951b786e8e3AM/6KYyAhykKYiwTJyL7aa7f7e5a1390523e44fa9180salt$');
 
 		return $_crypt;
 	}
@@ -90,7 +88,7 @@ class CsrfToken {
 	 */
 	public function _csrf_time_validity() {
 
-		$_csrf = time() - $_SESSION[$this->time];
+		$_csrf = time() - $_SESSION[self::$time];
 
 		return ($_csrf < 300) ? true : false;
 	}
@@ -99,7 +97,7 @@ class CsrfToken {
 	 * key generated in a cryptographically safe way.
 	 * @return openssl random pseudo bytes
 	 */
-	public function key() {
+	public static function key() {
 
 		$key = bin2hex(openssl_random_pseudo_bytes(35));
 

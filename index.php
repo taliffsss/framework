@@ -21,10 +21,15 @@ switch (ENVIRONMENT) {
 
 $GLOBALS["config"] = array(
 		"addName" => "MAN",
-		"domain" => "http://localhost:8080/mark",
+		"domain" => array(
+			"production" => "http://localhost:8080/man",
+			"development" => "http://localhost:8080/man",
+			"testing" => "http://localhost:8080/man",
+		),
 		"path" => array(
 			"app" => "app/",
 			"core" => "core/",
+			"vendor" => 'vendor/',
 			"index" => "index.php",
 		),
 		"defaults" => array(
@@ -39,5 +44,8 @@ $GLOBALS["config"] = array(
 			"name" => ""
 		)
 	);
+$GLOBALS["instances"] = array();
 require_once $GLOBALS["config"]["path"]["core"]."spl_register.php";
-new Routes();
+require_once $GLOBALS["config"]["path"]["vendor"]."autoload.php";
+require_once $GLOBALS["config"]["path"]["app"]."config/Router.php";
+new AIS\core\Loader();
