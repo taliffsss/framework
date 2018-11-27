@@ -1,6 +1,6 @@
 <?php
 
-define('ENVIRONMENT', isset($_SERVER['MAN']) ? $_SERVER['MAN'] : 'development');
+define('ENVIRONMENT', isset($_SERVER['MAFN']) ? $_SERVER['MAFN'] : 'development');
 
 switch (ENVIRONMENT) {
 	case 'development':
@@ -19,33 +19,7 @@ switch (ENVIRONMENT) {
 		exit(1);
 }
 
-$GLOBALS["config"] = array(
-		"addName" => "MAN",
-		"domain" => array(
-			"production" => "http://localhost:8080/man",
-			"development" => "http://localhost:8080/man",
-			"testing" => "http://localhost:8080/man",
-		),
-		"path" => array(
-			"app" => "app/",
-			"core" => "core/",
-			"vendor" => 'vendor/',
-			"index" => "index.php",
-		),
-		"defaults" => array(
-			"controller" => "Main",
-			"method" => "index"
-		),
-		"routes" => array(),
-		"database" => array(
-			"host" => "localhot",
-			"username" => "",
-			"password" => "",
-			"name" => ""
-		)
-	);
-$GLOBALS["instances"] = array();
-require_once $GLOBALS["config"]["path"]["core"]."spl_register.php";
-require_once $GLOBALS["config"]["path"]["vendor"]."autoload.php";
-require_once $GLOBALS["config"]["path"]["app"]."config/Router.php";
-new AIS\core\Loader();
+/**
+ * Declare global variable in associative array
+ */
+require_once "config/config.php";

@@ -1,0 +1,12 @@
+[26-Nov-2018 10:55:12 Europe/Berlin] PHP Notice:  Undefined property: User_list::$_user in D:\local\man\app\controllers\admin\User_list.php on line 24
+[26-Nov-2018 10:55:12 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function _getUser_all() on null in D:\local\man\app\controllers\admin\User_list.php:24
+Stack trace:
+#0 D:\local\man\app\controllers\admin\User_list.php(12): User_list->_show_list()
+#1 D:\local\man\system\core\Routes.php(72): User_list->index()
+#2 D:\local\man\system\core\Loader.php(18): Routes::_autoload()
+#3 D:\local\man\system\core\Autoload.php(14): Loader->__construct()
+#4 D:\local\man\system\core\Autoload.php(8): Autoload::_autoload()
+#5 D:\local\man\config\config.php(42): Autoload->__construct()
+#6 D:\local\man\index.php(25): require_once('D:\\local\\man\\co...')
+#7 {main}
+  thrown in D:\local\man\app\controllers\admin\User_list.php on line 24

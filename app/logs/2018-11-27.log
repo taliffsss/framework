@@ -1,0 +1,26 @@
+[27-Nov-2018 01:40:36 Europe/Berlin] PHP Warning:  PDO::__construct(): MySQL server has gone away in D:\local\man\system\core\Database.php on line 58
+[27-Nov-2018 01:40:41 Europe/Berlin] PHP Warning:  PDO::__construct(): MySQL server has gone away in D:\local\man\system\core\Database.php on line 58
+[27-Nov-2018 02:17:21 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined method Csv::_stock_list() in D:\local\man\app\controllers\admin\Csv.php:267
+Stack trace:
+#0 D:\local\man\system\core\Routes.php(72): Csv->index()
+#1 D:\local\man\system\core\Loader.php(18): Routes::_autoload()
+#2 D:\local\man\system\core\Autoload.php(14): Loader->__construct()
+#3 D:\local\man\system\core\Autoload.php(8): Autoload::_autoload()
+#4 D:\local\man\config\config.php(42): Autoload->__construct()
+#5 D:\local\man\index.php(25): require_once('D:\\local\\man\\co...')
+#6 {main}
+  thrown in D:\local\man\app\controllers\admin\Csv.php on line 267
+[27-Nov-2018 02:17:40 Europe/Berlin] PHP Notice:  Undefined variable: sess in D:\local\man\app\views\admin\pages\upload.php on line 12
+[27-Nov-2018 02:17:40 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function flash_message() on null in D:\local\man\app\views\admin\pages\upload.php:12
+Stack trace:
+#0 D:\local\man\system\core\Common.php(25): require_once()
+#1 D:\local\man\app\controllers\admin\Csv.php(268): Common::view('admin/pages/upl...', Array)
+#2 D:\local\man\system\core\Routes.php(72): Csv->index()
+#3 D:\local\man\system\core\Loader.php(18): Routes::_autoload()
+#4 D:\local\man\system\core\Autoload.php(14): Loader->__construct()
+#5 D:\local\man\system\core\Autoload.php(8): Autoload::_autoload()
+#6 D:\local\man\config\config.php(42): Autoload->__construct()
+#7 D:\local\man\index.php(25): require_once('D:\\local\\man\\co...')
+#8 {main}
+  thrown in D:\local\man\app\views\admin\pages\upload.php on line 12
+[27-Nov-2018 03:07:28 Europe/Berlin] PHP Notice:  Undefined variable: req in D:\local\man\app\views\admin\pages\requisition-form.php on line 24

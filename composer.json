@@ -9,9 +9,9 @@
     ],
     "autoload": {
 		"psr-4": {
-			"AIS\\": [
+			"Mark\\": [
                 "app",
-                "core"
+                "system"
             ]
 		}
 	},
