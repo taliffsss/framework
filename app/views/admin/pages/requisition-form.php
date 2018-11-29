@@ -21,7 +21,7 @@
 		 					<h4 class="title">Items Selected</h4>
 		 					<div class="result-container"></div>
 		 					<div class="itemsSelected">
-		 						<input type="text" id="request_code" name="request_code" value="<?php echo $req; ?>" hidden/>
+		 						<input type="text" id="request_code" name="request_code" value="<?php echo $requestCode; ?>" hidden/>
 		 						<div class="isDetails">Request ID: <?php echo $requestCode; ?></div>
 		 						<div class="isTable">
 		 							<table class="table" id="request-items-tbl">

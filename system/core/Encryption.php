@@ -19,27 +19,27 @@ class Encryption {
 	* Set cryptographically safe way.
 	* @var openssl random pseudo bytes
 	*/
-	protected $_key;
+	protected static $_key;
 
 	/**
 	* ciphers and modes
 	*/
-	protected $_cipher;
+	protected static $_cipher;
 
 	/**
 	* @var openssl random pseudo bytes
 	*/
-	protected $iv;
+	protected static $iv;
 
 	/**
 	* @var Int
 	*/
-	protected $_option;
+	protected static $_option;
 
 	//Constructor
 	function __construct() {
 
-		$this->_key = $this->key();
+		self::$_key = self::key();
 
 	}
 
@@ -49,15 +49,15 @@ class Encryption {
 	* @var String
 	* @return String
 	*/
-	public function encrypt($data) {
+	public static function encrypt($data) {
 
-		$ivlen = $this->ivlen();
+		$ivlen = self::ivlen();
 
-		$iv = $this->_iv($ivlen);
+		$iv = self::_iv($ivlen);
 
-		$crypt = $this->_openssl_encrypt($data,$this->_key,$iv);
+		$crypt = self::_openssl_encrypt($data,self::$_key,$iv);
 
-		$_hmac = $this->_hash_hmac($crypt,$this->_key);
+		$_hmac = self::_hash_hmac($crypt,self::$_key);
 
 		$_encrypt = base64_encode($iv.$_hmac.$crypt);
 
@@ -71,11 +71,11 @@ class Encryption {
 	* @var String
 	* @return String
 	*/
-	public function decrypt($data,$sha2len=32) {
+	public static function decrypt($data,$sha2len=32) {
 
 		$_decode = base64_decode($data);
 
-		$ivlen = $this->ivlen();
+		$ivlen = self::ivlen();
 
 		$iv = substr($_decode, 0, $ivlen);
 
@@ -83,11 +83,11 @@ class Encryption {
 
 		$crypt = substr($_decode, $ivlen + $sha2len);
 
-		$_decrypt = openssl_decrypt($crypt, $this->cipher(), $this->_key, $this->option(), $iv);
+		$_decrypt = openssl_decrypt($crypt, self::cipher(), self::$_key, self::option(), $iv);
 
-		$_hash = $this->_hash_hmac($crypt,$this->_key);
+		$_hash = self::_hash_hmac($crypt,self::$_key);
 
-		$res = $this->_hash_equals($hmac,$_hash,$_decrypt);
+		$res = self::_hash_equals($hmac,$_hash,$_decrypt);
 
 		return $res;
 		
@@ -98,7 +98,7 @@ class Encryption {
 	* 
 	* @var String
 	*/
-	public function _hash_equals($hmac,$_hash,$_decrypt) {
+	public static function _hash_equals($hmac,$_hash,$_decrypt) {
 
 		if (hash_equals($hmac, $_hash)) {
 
@@ -111,9 +111,9 @@ class Encryption {
 	* Decrypt given data with given method and key
 	* @var String & openssl random pseudo bytes
 	*/
-	public function _openssl_decrypt($data,$key,$iv) {
+	public static function _openssl_decrypt($data,$key,$iv) {
 
-		$_decrypt = openssl_decrypt($crypt, $this->cipher(), $key, $this->option(), $iv);
+		$_decrypt = openssl_decrypt($crypt, self::cipher(), $key, self::option(), $iv);
 
 		return $_decrypt;
 	}
@@ -122,7 +122,7 @@ class Encryption {
 	* Generate a keyed hash value using the HMAC method
 	* @var String & openssl random pseudo bytes & Int
 	*/
-	public function _hash_hmac($crypt,$key,$binary=true) {
+	public static function _hash_hmac($crypt,$key,$binary=true) {
 
 		$_hmac = hash_hmac('sha256', $crypt, $key, $binary);
 
@@ -134,9 +134,9 @@ class Encryption {
 	* Encrypts given data with given method and key
 	* @var String & openssl random pseudo bytes
 	*/
-	public function _openssl_encrypt($data,$key,$iv) {
+	public static function _openssl_encrypt($data,$key,$iv) {
 
-		$_cipher_text = openssl_encrypt($data, $this->cipher(), $key, $this->option(), $iv);
+		$_cipher_text = openssl_encrypt($data, self::cipher(), $key, self::option(), $iv);
 
 		return $_cipher_text;
 	}
@@ -144,18 +144,18 @@ class Encryption {
 	/**
 	* @var cipher methods
 	*/
-	public function cipher() {
+	public static function cipher() {
 
-		$this->_cipher = trim("AES-256-CBC");
+		self::$_cipher = trim("AES-256-CBC");
 
-		return $this->_cipher;
+		return self::$_cipher;
 	}
 
 	/**
 	* key generated in a cryptographically safe way.
 	* @var openssl random pseudo bytes
 	*/
-	public function key() {
+	public static function key() {
 
 		$key = bin2hex(openssl_random_pseudo_bytes(35));
 
@@ -166,9 +166,9 @@ class Encryption {
 	* cipher initialization vector (iv) length.
 	* @var Int
 	*/
-	public function ivlen() {
+	public static function ivlen() {
 
-		$ivlen = openssl_cipher_iv_length($this->cipher());
+		$ivlen = openssl_cipher_iv_length(self::cipher());
 
 		return $ivlen;
 
@@ -178,7 +178,7 @@ class Encryption {
 	* Generate a pseudo-random string of bytes
 	* @var openssl random pseudo bytes
 	*/
-	public function _iv($ivlen) {
+	public static function _iv($ivlen) {
 
 		$iv = openssl_random_pseudo_bytes($ivlen);
 
@@ -189,11 +189,11 @@ class Encryption {
 	* Can set either of the two OPENSSL_RAW_DATA and OPENSSL_ZERO_PADDING.
 	* @var Int
 	*/
-	public function option() {
+	public static function option() {
 
-		$this->_option = OPENSSL_ZERO_PADDING;
+		self::$_option = OPENSSL_ZERO_PADDING;
 
-		return $this->_option;
+		return self::$_option;
 	}
 	
 }

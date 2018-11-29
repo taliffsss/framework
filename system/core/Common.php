@@ -1,4 +1,5 @@
 <?php
+use Mark\core\Config;
 
 class Common {
 
@@ -18,7 +19,7 @@ class Common {
 		}
 
 		$viewFile = str_replace("::", "/", $viewFile);
-		$filename = $GLOBALS["autoload"]["path"]["app"]."views/{$viewFile}";
+		$filename = Config::get('autoload','path/app')."views/{$viewFile}";
 
 		if(file_exists($filename)){
 

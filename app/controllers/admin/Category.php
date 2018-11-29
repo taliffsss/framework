@@ -1,35 +1,29 @@
 <?php 
 
-class Category extends \Mark\core\My_Controller {
-
-	private $_m_category;
-	private $_m_stock;
+class Category extends My_Controller {
 
 	function __construct() {
 		parent::__construct();
-		$this->_m_category = new M_category;
-		$this->_m_stock = new M_stock;
 	}
 
 	/**
 	* Add New Category function 
 	* @return Boolean
 	**/
-	public function _add_category() {
-		$this->_is_login();
+	public function add() {
 
-		if($_POST) {
-			$catname = $this->input->post('cname');
-			$catdesc = $this->input->post('cdesc');
+		if(Input::_method()) {
+			$catname = Input::post('cname');
+			$catdesc = Input::post('cdesc');
 			
 			$data = array(
 				'catname' => $catname,
 				'catdesc' => $catdesc,
 				'created_at' => date("Y-m-d H:i:s"),
-				'created_by' => $this->session->userdata('uid')
+				'created_by' => Session::userdata('uid')
 			);
 
-			$this->_m_category->insert_category($data);
+			$this->_category->insert_category($data);
 		}
 	}
 
@@ -40,7 +34,7 @@ class Category extends \Mark\core\My_Controller {
 	 */
 	public function _check_category() {
 
-		$cname = $this->input->post('cname');
+		$cname = Input::post('cname');
 
 		if(is_string($cname)) {
 

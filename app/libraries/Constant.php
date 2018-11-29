@@ -56,6 +56,7 @@ class Constant {
 	const PASSWORD_RETRIEVAL = "Password Retrieval Verification";
 	const ALREADY_REGISTER = "User already registered!";
 	const ERROR_MSG = "Oops, Error Occured!";
+	const REJECT_ALL = "has been rejected";
 	const USERNAME = "Username already exist.";
 	const UNIT_EXIST = "Unit name already exist.";
 	const EMAIL_CONFIRM = "Email verified!";

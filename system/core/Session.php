@@ -1,7 +1,15 @@
 <?php
+use Mark\core\Config;
+
 class Session {
 
 	private static $_start = false;
+
+	/**
+	 * Session message name for timer
+	 * @var	string
+	 */
+	private static $start = 'start';
 
 	/**
 	 * Check if Session name is already exist
@@ -33,7 +41,20 @@ class Session {
 	}
 
 	/**
-	 * Display message using session it will delete after display
+	 * Set message to show && time for unset session message
+	 * @param string
+	 * @param string
+	 * @return  void 
+	 */
+	public static function setMessage($key, $value = NULL) {
+
+		self::put($key, $value);
+		self::put(self::$start, time());
+
+	}
+
+	/**
+	 * Display message using session it will delete after 5 seconds display
 	 * @param string
 	 * @param string
 	 * @return string
@@ -42,8 +63,13 @@ class Session {
 
 		if(self::has($name)) {
 			$session = self::get($name);
-			self::delete($name);
-			return $session;
+			$start = time() - self::get('start');
+
+			if($start < 5) {
+				return $session;
+			} else {
+				self::delete($name);
+			}
 		}
 	}
 
@@ -103,9 +129,12 @@ class Session {
 
 	}
 
+	/**
+	 * Set session save in file
+	 */
 	private static function save() {
 
-		$dirName = $GLOBALS["autoload"]["path"]["app"]."sessions";
+		$dirName = Config::get('autoload','path/app')."sessions";
 
 		if(!is_dir($dirName)) {
 			mkdir($dirName,0755, true);

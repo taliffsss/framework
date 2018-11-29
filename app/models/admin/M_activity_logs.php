@@ -16,7 +16,7 @@ class M_activity_logs extends My_Model {
 		try {
 			
 			$date = date('Y-m-d H:i:s');
-			$uid = $this->session->userdata('uid');
+			$uid = Session::userdata('uid');
 
 			$this->db->query("INSERT INTO {$this->_activity_log} (user_id,module,action,obj_ids,obj_values,date_audit) VALUES (:user_id,:module,:action,:obj_ids,:obj_values,:date_audit)");
 

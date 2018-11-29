@@ -12,7 +12,7 @@ class Cookie {
 	}
 
 	/**
-	 * Retrieve Session variable
+	 * Retrieve Cookie variable
 	 * @param string
 	 * @return void
 	 */

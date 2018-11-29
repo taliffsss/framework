@@ -1,6 +1,6 @@
 <?php
 
-class Forgot extends \Mark\core\My_Controller {
+class Forgot extends My_Controller {
 
 	function __construct() {
 		parent::__construct();
@@ -14,7 +14,9 @@ class Forgot extends \Mark\core\My_Controller {
 
 		$data['page'] = 'admin/pages/forgot-password';
 		
-		Common::view('admin/templates/template',$data);
+		Common::view('admin/includes/header');
+		Common::view('admin/pages/forgot-password',$data);
+		Common::view('admin/includes/footer');
 	}
 }
 

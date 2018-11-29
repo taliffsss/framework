@@ -38,27 +38,27 @@ class Login extends My_Controller {
 						if(is_array($res) && (count($res) > 0)) {
 							if($res['reset_date'] != NULL) {
 
-								Session::put('success', "<div class='alert alert-danger' role='alert'>".Constant::LOCKED."</div>");
+								Session::setMessage('success', "<div class='alert alert-danger' role='alert'>".Constant::LOCKED."</div>");
 								
 							} else {
 							
 								$this->_password_matching($pass,$res);
 							}
 						} else {
-							Session::put('success', "<div class='alert alert-danger' role='alert'>".Constant::INACTIVE."</div>");
+							Session::setMessage('success', "<div class='alert alert-danger' role='alert'>".Constant::INACTIVE."</div>");
 						}
 
 					} else {
-						Session::put('success',Constant::INVALID_CREDENTIAL);
+						Session::setMessage('success',Constant::INVALID_CREDENTIAL);
 					}
 
 				} else {
 
-					Session::put('success', "<div class='alert alert-danger' role='alert'>".Constant::CSRF_EXPIRED."</div>");
+					Session::setMessage('success', "<div class='alert alert-danger' role='alert'>".Constant::CSRF_EXPIRED."</div>");
 
 				}
 			} else {
-				Session::put('success',Constant::RECAPTCHA);
+				Session::setMessage('success',Constant::RECAPTCHA);
 			}
 		}
 
@@ -93,7 +93,7 @@ class Login extends My_Controller {
 
 		} else {
 
-			Session::put('success',Constant::INVALID_CREDENTIAL);
+			Session::setMessage('success',Constant::INVALID_CREDENTIAL);
 		}
 	}
 

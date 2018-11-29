@@ -6,7 +6,7 @@ use Mark\core\Config;
  * @copyright Jul 2018 <Mark Anthony Naluz>
  */
 
-class CsrfToken {
+class Token {
 	
 	/**
 	 * CSRF Token
@@ -38,16 +38,16 @@ class CsrfToken {
 	private static $_start = null;
 
 	function __construct() {
-		CsrfToken::start();
+		self::start();
 	}
 
-	private function start() {
+	private static function start() {
 
 		self::$_csrf = Config::get('config','csrf_token');
 
 		if(self::$_csrf == TRUE) {
 			if(!isset(self::$_start)) {
-				self::$_start = CsrfToken::_set_csrf_token();
+				self::$_start = self::_set_csrf_token();
 			}
 
 			return self::$_start;
@@ -62,16 +62,16 @@ class CsrfToken {
 	 */
 	static function _set_csrf_token() {
 
-		self::$name = $GLOBALS['config']['csrf_name'];
-		self::$expired_at = $GLOBALS['config']['csrf_time'];
+		self::$name = Config::get('config','csrf_name');
+		self::$expired_at = Config::get('config','csrf_time');
 
-		self::$_hash = CsrfToken::_csrf_hash();
+		self::$_hash = self::_csrf_hash();
 
 		if(!isset($_SESSION[self::$name])) {
-			CsrfToken::_generate_new_hash();
+			self::_generate_new_hash();
 		} else {
 			if($_SERVER['REQUEST_METHOD'] != "POST") {
-				CsrfToken::_generate_new_hash();
+				self::_generate_new_hash();
 			}
 		}
 	}
@@ -80,8 +80,8 @@ class CsrfToken {
 	 * Set hash in Session
 	 */
 	public static function _generate_new_hash() {
-		$_SESSION[self::$name] = self::$_hash;
-		$_SESSION[self::$time] = time();
+		Session::put(self::$name,self::$_hash);
+		Session::put(self::$time,time());
 	}
 
 	/**
@@ -90,12 +90,12 @@ class CsrfToken {
 	 * @return true or String
 	 */
 	public function _csrf_is_valid($key) {
-		if($_SERVER['REQUEST_METHOD'] == 'POST') {
-			if($this->_csrf_time_validity()) {
-				if($_SESSION[self::$name] === $key) {
+		if(Input::_method()) {
+			if(self::_csrf_time_validity()) {
+				if(Session::get(self::$name) === $key) {
 					return true;
 				} else {
-					$this->_generate_new_hash();
+					self::_generate_new_hash();
 				}
 			}
 		}
@@ -108,7 +108,7 @@ class CsrfToken {
 	 */
 	private static function _csrf_hash() {
 
-		$_crypt = crypt(CsrfToken::key(), '$2a$07$abulpE26zd/Qxe08b951b786e8e3AM/6KYyAhykKYiwTJyL7aa7f7e5a1390523e44fa9180salt$');
+		$_crypt = crypt(self::key(), '$2a$07$abulpE26zd/Qxe08b951b786e8e3AM/6KYyAhykKYiwTJyL7aa7f7e5a1390523e44fa9180salt$');
 
 		return $_crypt;
 	}
@@ -119,7 +119,7 @@ class CsrfToken {
 	 */
 	public function _csrf_time_validity() {
 
-		$_csrf = time() - $_SESSION[self::$time];
+		$_csrf = time() - Session::get(self::$time);
 
 		return ($_csrf < self::$expired_at) ? true : false;
 	}

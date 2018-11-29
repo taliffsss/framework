@@ -1,4 +1,5 @@
 <?php
+use Mark\core\Database;
 
 class My_Controller extends Controller {
 
@@ -88,6 +89,11 @@ class My_Controller extends Controller {
 	 * @var Obj
 	 */
 	public $_activity_logs;
+	/**
+	 * Mailer Libraries class Instance
+	 * @var Obj
+	 */
+	public $_email;
 
 	function __construct() {
 		parent::__construct();
@@ -108,6 +114,8 @@ class My_Controller extends Controller {
 		$this->_item = new M_items;
 		$this->_request = new M_request;
 		$this->_activity_logs = new M_activity_logs;
+		$this->_email = new Mark\libraries\Mailer;
+		$this->db = Database::getIntance();
 	}
 
 	/**

@@ -1,4 +1,5 @@
 <?php 
+use Mark\libraries\Constant;
 
 	class Request extends My_Controller {
 	
@@ -10,19 +11,12 @@
 		public function index() {
 			$data['navbar'] = $this->_navigation_bar();
 			$data['ticker'] = $this->ticker();
-			$data['requestCode'] = $this->gen_requestCode();
+			$data['requestCode'] = $this->_generateCode('REQ');
 			$data['details'] = $this->display_cat_per_row();
 			Common::view('admin/includes/header');
 			Common::view('admin/pages/requisition-form',$data);
 			Common::view('admin/includes/modal',$data);
 			Common::view('admin/includes/footer');
-		}
-
-		/**
-		* Generate request code
-		**/
-		public function gen_requestCode(){
-			return $this->_generateCode('REQ');
 		}
 
 		/**
@@ -97,14 +91,12 @@
 		}
 
 
-		public function _submit_request(){
+		public function submit_request(){
 			/**
 			* Status
 			* Status = Approval Pending – Items Reserved. ; Queue = Manager
 			* Status = Request Expired – No stocks Available ; Queue = Manager (if wasn’t approved within 24 hrs)
 			**/
-
-			$this->_is_login();
 			$output = NULL;
 
 			if(isset($_POST)) {
@@ -112,7 +104,7 @@
 				$request_code = (isset($_POST['request_code'])) ? $_POST['request_code'] : '';
 				$item = (isset($_POST['item_ids'])) ? $_POST['item_ids'] : array();
 				$qty = (isset($_POST['qty'])) ? $_POST['qty'] : array();
-				$code = ($this->input->post('code')) ? $this->input->post('code') : array();
+				$code = (Input::post('code')) ? Input::post('code') : array();
 
 				$ids = array ('request_code' => $request_code,
 							   'item_ids' => $item);
@@ -143,7 +135,7 @@
 					$this->_request->insertTransaction($data);
 				}
 
-				$this->_m_activity_logs->_save_logs(array('module' => Constant::M_REQUEST, 'action' => Constant::A_CREATE, 'obj_ids' => json_encode($ids), 'obj_values' => json_encode($qty)));
+				$this->_activity_logs->_save_logs(array('module' => Constant::M_REQUEST, 'action' => Constant::A_CREATE, 'obj_ids' => json_encode($ids), 'obj_values' => json_encode($qty)));
 
 				$this->send_email_to_manager($output,$request_code);
 			}

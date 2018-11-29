@@ -1,5 +1,5 @@
 <?php
-namespace AIS\libraries;
+namespace Mark\libraries;
 
 /**
  * @package PHP Mailer Class

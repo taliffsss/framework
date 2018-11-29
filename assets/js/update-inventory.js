@@ -7,7 +7,6 @@ function _update_inventory(reqcode) {
 }
 
 function _confirm_update_inventory(reqcode) {
-	alert("im here!!!");
 	var uri = unique();
 
 	$.ajax({

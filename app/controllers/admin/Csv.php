@@ -12,7 +12,7 @@
 		
 		function __construct(){
 			parent::__construct();
-			if(!Session::userdata('logged_in')) Url::redirect('dashboard');
+			if(!Session::userdata('logged_in')) Url::redirect('login');
 		}
 
 		public function index(){
@@ -20,7 +20,7 @@
 			if(Input::_method()){
 				
 				if ($_FILES['csvfile']['size'] == 0){
-    				Session::put('import_msg',Constant::CVS_REQUIRED);
+    				Session::setMessage('import_msg',Constant::CVS_REQUIRED);
 				}else{
 					$mimes = array('application/vnd.ms-excel','text/plain','text/csv');
 					if(in_array($_FILES['csvfile']['type'],$mimes)){
@@ -48,7 +48,7 @@
 				    		
 				    		$result = $this->_upload->insertSub_dept($arr);
 
-				    		(($result == true) ? Session::put('import_msg',Constant::SUCC_IMPORT) : Session::put('import_msg',Constant::FAIL_IMPORT)	);
+				    		(($result == true) ? Session::setMessage('import_msg',Constant::SUCC_IMPORT) : Session::setMessage('import_msg',Constant::FAIL_IMPORT)	);
 				    		
 						}elseif(strpos(strtolower($filename), "employee") !== FALSE){
 							
@@ -142,7 +142,7 @@
 										 	if($valid > 0){
 
 										 		$this->_upload->deleteEmployee($val['emp_id']);
-										 		Session::put('import_dup',Constant::CVS_DUPLICATE);
+										 		Session::setMessage('import_dup',Constant::CVS_DUPLICATE);
 
 										 	}else{
 										 		
@@ -194,18 +194,18 @@
 								//insert to activity log 
 								$activity_upload = $this->_upload->first_upload_stock($details);
 								
-								(($activity_upload == 1) ? Session::put('import_msg',Constant::SUCC_IMPORT) : Session::put('import_msg',Constant::FAIL_IMPORT));
+								(($activity_upload == 1) ? Session::setMessage('import_msg',Constant::SUCC_IMPORT) : Session::put('import_msg',Constant::FAIL_IMPORT));
 							
 							}else{
 								//display error message
-								Session::put('import_msg',Constant::FAIL_IMPORT);
+								Session::setMessage('import_msg',Constant::FAIL_IMPORT);
 							}
 
 						}elseif(strpos(strtolower($filename), "category") !== FALSE){
 							
 							$result = $this->_upload->insertCategory($arr);
 
-							(($result == true) ? Session::put('import_msg',Constant::SUCC_IMPORT) : Session::put('import_msg',Constant::FAIL_IMPORT));
+							(($result == true) ? Session::setMessage('import_msg',Constant::SUCC_IMPORT) : Session::put('import_msg',Constant::FAIL_IMPORT));
 
 						}elseif(strpos(strtolower($filename), "unit") !== FALSE){
 							$count_error = 0;
@@ -253,11 +253,11 @@
 
 							}
 
-							(($count_error == 0) ? Session::put('import_msg',Constant::SUCC_IMPORT) : Session::put('import_msg',Constant::FAIL_IMPORT)	);
+							(($count_error == 0) ? Session::setMessage('import_msg',Constant::SUCC_IMPORT) : Session::setMessage('import_msg',Constant::FAIL_IMPORT)	);
 
 						}
 					} else {
-						Session::put('import_msg',Constant::CVS_ONLY);
+						Session::setMessage('import_msg',Constant::CVS_ONLY);
 					}
 				}
 			}

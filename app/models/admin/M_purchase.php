@@ -32,5 +32,34 @@ class M_purchase extends My_Model {
 		}
 
 	}
+
+	/**
+	 * Get Purchased items for certain month 
+	 * @param array
+	 * @return array 
+	 */
+	public function _getPurchasedPerMonth($data) {
+		
+		try {
+			
+			$this->db->query("SELECT p.*, item_name, category_name, first_name, last_name, sub_dept_name FROM {$this->_ais_purchased} p JOIN {$this->_ais_item} i ON p.item_id=i.item_id JOIN {$this->_ais_category} c ON i.category_id=c.category_id JOIN ais_employee e ON p.created_by=e.user_id JOIN ais_sub_department sub ON e.sub_dept_id=sub.sub_dept_id WHERE i.category_id=:category_id AND p.created_at BETWEEN :date_from AND :date_to");
+
+			$this->db->bind(":category_id",$data['category_id']);
+			$this->db->bind(":date_from",$data['date_from']." 00:00:00");
+			$this->db->bind(":date_to",$data['date_to']." 23:59:59");
+
+			$this->db->execute();
+
+			$row = $this->db->resultset();
+
+			return $row;
+
+		} catch (Exception $e) {
+
+			$e->getMessage();
+			
+		}
+
+	}
 }
 ?>

@@ -5,7 +5,7 @@
 				</div>
 				<h3>Password Retrieval</h3>
 				
-				<div class="err-msg-email"></div>
+				<div class="forgot-msg"></div>
 
 				<div class="backBtn" style="margin-bottom: -5%;">
 				    <a href="#" onclick="window.history.go(-1); return false;">Back to Login</a>
@@ -13,7 +13,7 @@
 				
 				<div class="form">
 					<form method="POST" action="" id="forgot__pass" name="forgot__pass">
-						<input type="hidden" name="csrf_token" id="csrf_token" value="<?php echo Session::userdata('csrf-token'); ?>">
+						<input type="hidden" name="csrf_token" id="csrf_token" value="<?php echo Session::userdata('csrf_name'); ?>">
 						<div class="input_div">
 							<span class="input">
 								<input class="input__field" type="email" id="email" name="email"/>

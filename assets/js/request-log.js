@@ -23,7 +23,7 @@ function _rejected_yes_No(code,id) {
 }
 
 function _approved_all(code) {
-	document.querySelector('#formAction').action = 'http://dev.mswlive.com/admin-inventory/request-logs/approved-all/'+code
+	document.querySelector('#formAction').action = 'http://localhost:8080/man/request-logs/approved-all/'+code
 	document.querySelector('#modal_header').innerHTML = 'Approved All';
 	if(segment == 1) {
 		document.querySelector('#modal_body').innerHTML = 'Are you sure you want to issue the requested items?'
@@ -36,7 +36,7 @@ function _approved_all(code) {
 }
 
 function _rejected_all(code) {
-	document.querySelector('#formAction').action = 'http://dev.mswlive.com/admin-inventory/request-logs/reject-all/'+code
+	document.querySelector('#formAction').action = 'http://localhost:8080/man/request-logs/reject-all/'+code
 	document.querySelector('#rejected_header').innerHTML = 'Reject All';
 	$('#rejected_Footer').html('<input type="submit" class="btn thmBtn" value="Yes"><button type="button" class="btn btn-default" data-dismiss="modal">No</button>')
 	$('#rejected_yN').modal('show');
@@ -45,7 +45,7 @@ function _rejected_all(code) {
 function _reject_all(code) {
 	myaction = document.querySelector('#reject-reason').value;
 	const formAction = document.querySelector('#formAction').action;
-	if(formAction != 'http://dev.mswlive.com/admin-inventory/request-logs/reject-all/'+code) {
+	if(formAction != 'http://localhost:8080/man/request-logs/reject-all/'+code) {
 		return true;
 	} else {
 		if(myaction != '') {
@@ -75,7 +75,7 @@ function _rejected(code,myid,id) {
 	myaction = document.querySelector('#code-'+id).value;
 
 	$.ajax({
-		url: 'http://dev.mswlive.com/admin-inventory/request-logs/rejected/' + uri,
+		url: 'http://localhost:8080/man/request-logs/rejected/' + uri,
 		type: "POST",
 		data: {code:code,myid:myid,transcode:myaction},
 		beforeSend:function(){

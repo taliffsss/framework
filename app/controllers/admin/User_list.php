@@ -9,10 +9,12 @@ class User_list extends My_Controller {
 
 	public function index() {
 		$data['navbar'] = $this->_navigation_bar();
+		$data['category'] = $this->_show_category();
 		$data['ticker'] = $this->ticker();
 		$data['userlist'] = $this->_show_list();
 		Common::view('admin/includes/header');
 		Common::view('admin/pages/users-list',$data);
+		Common::view('admin/includes/modal',$data);
 		Common::view('admin/includes/footer');
 	}
 

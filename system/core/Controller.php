@@ -27,7 +27,7 @@ class Controller {
 
 	function __construct() {
 		$GLOBALS["instances"][] = &$this;
-		$this->_token = new CsrfToken;
+		$this->_token = new Token;
 	}
 
 }

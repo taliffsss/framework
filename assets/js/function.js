@@ -82,36 +82,36 @@ $(document).ready(function(){
 		var formData = $('#forgot__pass').serialize();
 		var answer = document.forms["forgot__pass"]["answer"].value;
 		var uri = unique();
-		var failed = "Maximum attempt reached. Contact Kristel Catral of Back Office ADMIN for assistance.";
-		var token = 'CSRF token expired';
-		var invalid = "Invalid security answer.";
-		var success = "Password Reset Verification has been sent to your email.";
+		let failed = "Maximum attempt reached. Contact Kristel Catral of Back Office ADMIN for assistance.";
+		let token = 'CSRF token expired';
+		let invalid = "Invalid security answer.";
+		let success = "Password Reset Verification has been sent to your email.";
 
 		if(answer != '') {
 			$.ajax({
 				url: _domain()+"/password-recovery/error/" + uri,
 				method: "POST",
 				data: formData,
+				dataType: "json",
 				beforeSend:function(){
 					$('#disabled-btn').attr('disabled','disabled');
 					$('#disabled-btn').val('loading...');
 				},
 				success: function(data) {
-					alert(data);
-					if(data == success) {
-						$('.err-msg-email').html("<div class='alert alert-success' role='alert'>"+data+"</div>");
+					if(data.msg == success) {
+						document.querySelector(".forgot-msg").innerHTML = "<div class='alert alert-danger' role='alert'>"+data.msg+"</div>";
 						$('form#forgot__pass')[0].reset();
 						$('.c_forgot').hide();
 						ajax_redirect()
-					} else if(data == failed) {
-						$('.err-msg-email').html("<div class='alert alert-danger' role='alert'>"+data+"</div>");
+					} else if(data.msg == failed) {
+						document.querySelector(".forgot-msg").innerHTML = "<div class='alert alert-danger' role='alert'>"+data.msg+"</div>";
 						$('.c_forgot').hide();
-					} else if(data == token) {
-						$('.err-msg-email').html("<div class='alert alert-danger' role='alert'>"+data+"</div>");
+					} else if(data.msg == token) {
+						document.querySelector(".forgot-msg").innerHTML = "<div class='alert alert-danger' role='alert'>"+data.msg+"</div>";
 						$('#disabled-btn').removeAttr('disabled');
 						$('#disabled-btn').val('Reset Password');
-					} else if(data == invalid) {
-						$('.err-msg-email').html("<div class='alert alert-danger' role='alert'>"+data+"</div>");
+					} else if(data.msg == invalid) {
+						document.querySelector(".forgot-msg").innerHTML = "<div class='alert alert-danger' role='alert'>"+data.msg+"</div>";
 						$('#security_answer').val('');
 						$('#disabled-btn').removeAttr('disabled');
 						$('#disabled-btn').val('Reset Password');
@@ -253,8 +253,10 @@ $(document).ready(function(){
 
 	 	var val = $(this).val();
 
-	 	_cat_verify(val);
-
+	 	if(val == '') {
+			_cat_verify();
+		}
+	
 	});
 
 	/******
@@ -508,33 +510,26 @@ function _cat_verify(val) {
 
 	var uri = unique();
 
-	if(val == '') {
-		toastr.error('Empty fields', 'Error', {
-			timeOut: 8000
-		});
-	} else {
-
-		$.ajax({
-			url: "stocks/catname/" + uri,
-			method: "POST",
-			data: {
-				cname: val
-			},
-			dataType: "json",
-			success: function(data) {
-				if(data.msg == 'Category name already exists.') {
-					$('.err-msg-name').html("Category name already exists.");
-					$('#cat-submit').attr('disabled','disabled');
-				} else {
-					$('.err-msg-name').html('');
-					$("input[type=submit]").removeAttr('disabled');
-				}
-			},
-			error: function() {
-				$('err-msg-name').html('Something went wrong.');
+	$.ajax({
+		url: "stocks/catname/" + uri,
+		method: "POST",
+		data: {
+			cname: val
+		},
+		dataType: "json",
+		success: function(data) {
+			if(data.msg == 'Category name already exists.') {
+				$('.err-msg-name').html("Category name already exists.");
+				$('#cat-submit').attr('disabled','disabled');
+			} else {
+				$('.err-msg-name').html('');
+				$("input[type=submit]").removeAttr('disabled');
 			}
-		});
-	}
+		},
+		error: function() {
+			$('err-msg-name').html('Something went wrong.');
+		}
+	});
 
 }
 
@@ -648,7 +643,7 @@ function _unit_add() {
 				toastr.success('<b>'+unit+'</b> unit successfully added.', 'Success', {
 					timeOut: 5000
 				});
-				setTimeout(location.reload.bind(location), 3000);
+				//setTimeout(location.reload.bind(location), 3000);
 			},
 			error: function() {
 				toastr.error('Oops, error!', 'Error', {
@@ -797,8 +792,7 @@ function forgot_pass_link() {
  */
 function _domain() {
 
-	//var link = 'http://dev.mswlive.com/admin-inventory';
-	var link = 'http://localhost:8080/ais-tal';
+	var link = 'http://localhost:8080/man';
 
 	return link;
 }
@@ -808,7 +802,7 @@ function _domain() {
  */
 function ajax_redirect() {
 	window.setTimeout(function() {
-		window.location = "http://localhost:8080/ais-tal"
+		window.location = "http://localhost:8080/man"
 	}, 5000)
 }
 

@@ -5,6 +5,7 @@ class Request_logs extends My_Controller {
 
 	function __construct() {
 		parent::__construct();
+		if(!Session::userdata('logged_in')) Url::redirect('login');
 		$this->_expired_request();
 	}
 
@@ -17,6 +18,7 @@ class Request_logs extends My_Controller {
 		$data['transaction'] = $this->get_all_request_logs();
 		Common::view('admin/includes/header');
 		Common::view('admin/pages/request-logs',$data);
+		Common::view('admin/includes/modal',$data);
 		Common::view('admin/includes/footer');
 	}
 
@@ -26,8 +28,10 @@ class Request_logs extends My_Controller {
 		$data['navbar'] = $this->_navigation_bar();
 		$data['transaction'] = $this->getSingleTransaction();
 		$data['print'] = $this->_printTemplate();
+		$data['category'] = $this->_show_category();
 		Common::view('admin/includes/header');
 		Common::view('admin/pages/request-logs',$data);
+		Common::view('admin/includes/modal',$data);
 		Common::view('admin/includes/footer');
 	}
 
@@ -290,12 +294,12 @@ class Request_logs extends My_Controller {
 	 */
 	public function approved_all() {
 		
-		if($_POST) {
+		if(Input::_method()) {
 
 			$code = Url::uri_segment(4);
-			$item = ($this->input->post('item_id')) ? $this->input->post('item_id') : '';
-			$iName = ($this->input->post('itemName')) ? $this->input->post('itemName') : '';
-			$qty = ($this->input->post('issued')) ? $this->input->post('issued') : '';
+			$item = (Input::post('item_id')) ? Input::post('item_id') : '';
+			$iName = (Input::post('itemName')) ? Input::post('itemName') : '';
+			$qty = (Input::post('issued')) ? Input::post('issued') : '';
 			$mngr = (Session::userdata('role') == 3) ? Session::userdata('empid') : NULL;
 			$admin = (Session::userdata('role') == 1) ? Session::userdata('empid') : NULL;
 			$output = NULL;
@@ -305,13 +309,13 @@ class Request_logs extends My_Controller {
 
 					$data = array(
 						'rejection_reason' => NULL,
-						'queue' => $this->input->post('queue'),
+						'queue' => Input::post('queue'),
 						'request_code' => $code,
 						'item_id' => $item[$x],
 						'item_qty_issued' => $qty[$x],
 						'approved_by' => $mngr,
 						'issued_by' => $admin,
-						'status' => $this->input->post('status'),
+						'status' => Input::post('status'),
 						'modified_at' => date("Y-m-d H:i:s"),
 						'modified_by' => Session::userdata('uid')
 					);
@@ -325,7 +329,7 @@ class Request_logs extends My_Controller {
 					if($this->_request_logs->_getApprovedAllUpdate($data)) {
 						
 						if(Session::userdata('role') == 1) {
-							Session::set_message('success',"Item/s listed on  <b>".Url::uri_segment(4)."</b>  is ready for issuance");
+							Session::setMessage('success','Item/s listed on  <b>'.Url::uri_segment(4).'</b>  is ready for issuance');
 						}
 						Url::redirect('request-logs');
 					}
@@ -379,7 +383,7 @@ class Request_logs extends My_Controller {
 	 */
 	public function reject_all() {
 		
-		if($_POST) {
+		if(Input::_method()) {
 			$item = (isset($_POST['item_id'])) ? $_POST['item_id'] : '';
 			$qty = (isset($_POST['issued'])) ? $_POST['issued'] : '';
 			$mngr = (Session::userdata('role') == 3) ? Session::userdata('empid') : NULL;
@@ -389,7 +393,7 @@ class Request_logs extends My_Controller {
 				for($x = 0; $x < sizeof($item); $x++) {
 
 					$data = array(
-						'rejection_reason' => $this->input->post('rejection_reason'),
+						'rejection_reason' => Input::post('rejection_reason'),
 						'queue' => Session::userdata('role'),
 						'request_code' => Url::uri_segment(4),
 						'item_id' => $item[$x],
@@ -401,6 +405,9 @@ class Request_logs extends My_Controller {
 						'modified_by' => Session::userdata('uid')
 					);
 					if($this->_request_logs->_getApprovedAllUpdate($data)) {
+
+						Session::setMessage('success','<b>'.$data['request_code'].'</b> '.Constant::REJECT_ALL);
+						
 						Url::redirect('request-logs');
 					}
 				}
@@ -419,15 +426,15 @@ class Request_logs extends My_Controller {
 		$mngr = (Session::userdata('role') == 3) ? Session::userdata('empid') : NULL;
 		$admin = (Session::userdata('role') == 1) ? Session::userdata('empid') : NULL;
 
-		if($_POST) {
-			$code = $this->input->post('code');
+		if(Input::_method()) {
+			$code = Input::post('code');
 			$res = $this->_item->_getID($code);
 			$data = array(
-				'request_code' => $this->input->post('transcode'),
+				'request_code' => Input::post('transcode'),
 				'item_id' => $res['item_id'],
 				'approved_by' => $mngr,
 				'issued_by' => $admin,
-				'remarks' => $this->input->post('myid'),
+				'remarks' => Input::post('myid'),
 				'status' => Constant::DISAPPROVED,
 				'modified_at' => date("Y-m-d H:i:s"),
 				'modified_by' => Session::userdata('uid')
@@ -458,7 +465,7 @@ class Request_logs extends My_Controller {
 	*/
 	public function _deduct_inventory(){
 		
-		$request_code = $this->input->post('reqcode');
+		$request_code = Input::post('reqcode');
 
 		//Get details of transaction based on REQUEST_CODE
 		$transaction_arr = $this->_request_logs->_getTransactionDetails($request_code);

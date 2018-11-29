@@ -1,22 +1,17 @@
 <?php 
 
-class Stock extends \Mark\core\My_Controller {
-
-	private $_m_stock;
+class Stock extends My_Controller {
 
 	function __construct() {
 		parent::__construct();
-		$this->_m_stock = new M_stock;
 	}
 
 	/**
 	* Display Category list 
 	**/
 	public function _stock_list() {
-		
-		$this->_is_login();
 
-		$data = $this->_m_stock->_get_all_stocks();
+		$data = $this->_stock->_get_all_stocks();
 		
 		$output = NULL;
 
@@ -46,7 +41,7 @@ class Stock extends \Mark\core\My_Controller {
 
 		if($_POST) {
 
-			$id = $this->input->post('code');
+			$id = Input::post('code');
 
 			$_data = $this->_stock->_get_stock_by_id($id);
 
@@ -71,9 +66,9 @@ class Stock extends \Mark\core\My_Controller {
 	public function _replenish_update() {
 		if($_POST) {
 
-			$itemID = $this->input->post('itemID');
-			$curStock = $this->input->post('itemCurrentStocks');
-			$purQuan = $this->input->post('purchaseQuantity');
+			$itemID = Input::post('itemID');
+			$curStock = Input::post('itemCurrentStocks');
+			$purQuan = Input::post('purchaseQuantity');
 
 			$item = array(
 				'itemid' => $itemID,
@@ -86,7 +81,7 @@ class Stock extends \Mark\core\My_Controller {
 			$purchase = array(
 				'itemid' => $itemID,
 				'purchaseQuantity' => $purQuan,
-				'entryNote' => $this->input->post('entryNote'),
+				'entryNote' => Input::post('entryNote'),
 				'created_at' => date('Y-m-d H:i:s'),
 				'created_by' => $this->session->userdata('uid')
 			);
@@ -109,8 +104,9 @@ class Stock extends \Mark\core\My_Controller {
 	* Display Unit name list 
 	* @param $category
 	**/
-	public function _opt_unit($category_id){
-		echo $this->_get_unit_name($category_id);
+	public function opt_unit(){
+		$id = Url::uri_segment(4);
+		echo $this->_get_unit_name($id);
 	}
 
 	/**
@@ -119,7 +115,7 @@ class Stock extends \Mark\core\My_Controller {
 	 * @return Boolean
 	 */
 	public function _check_item() {
-		$iname = $this->input->post('iname');
+		$iname = Input::post('iname');
 
 		if(is_string($iname)) {
 
@@ -143,16 +139,15 @@ class Stock extends \Mark\core\My_Controller {
 	/**
 	* Add New Item function 
 	**/
-	public function _add_item() {
-		$this->_is_login();
+	public function add_item() {
 
-		if($_POST) {
-			$catid = $this->input->post('category_name');
-			$unitid = $this->input->post('unit_name');
-			$itemname = $this->input->post('iname');
-			$itemdesc = $this->input->post('idesc');
-			$standard_qty = $this->input->post('s__qty');
-			$reorder_point = $this->input->post('r__pt');
+		if(Input::_method()) {
+			$catid = Input::post('category_name');
+			$unitid = Input::post('unit_name');
+			$itemname = Input::post('iname');
+			$itemdesc = Input::post('idesc');
+			$standard_qty = Input::post('s__qty');
+			$reorder_point = Input::post('r__pt');
 			
 			$data = array(
 				'catid' => $catid,
@@ -162,7 +157,7 @@ class Stock extends \Mark\core\My_Controller {
 				'standard_qty' => $standard_qty,
 				'reorder_point' => $reorder_point,
 				'created_at' => date("Y-m-d H:i:s"),
-				'created_by' => $this->session->userdata('uid')
+				'created_by' => Session::userdata('uid')
 			);
 
 			$this->_stock->insert_item($data);
@@ -176,7 +171,7 @@ class Stock extends \Mark\core\My_Controller {
 
 		if($_POST) {
 
-			$id = $this->input->post('item_id');
+			$id = Input::post('item_id');
 
 			$_data = $this->_stock->_get_stock_by_id($id);
 
@@ -202,11 +197,11 @@ class Stock extends \Mark\core\My_Controller {
 		$this->_is_login();
 
 		if($_POST) {
-			$itemid = $this->input->post('item_id');
-			$itemname = $this->input->post('it_name');
-			$itemdesc = $this->input->post('i_description');
-			$standard_qty = $this->input->post('item_standard');
-			$reorder_point = $this->input->post('reorder');
+			$itemid = Input::post('item_id');
+			$itemname = Input::post('it_name');
+			$itemdesc = Input::post('i_description');
+			$standard_qty = Input::post('item_standard');
+			$reorder_point = Input::post('reorder');
 			
 			$data = array(
 				'itemid' => $itemid,

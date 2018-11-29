@@ -20,11 +20,13 @@ class Url {
 	* Get base Url whether local or live sites
 	* @return url
 	*/
-	public static function baseUrl() {
+	public static function baseUrl($str=null) {
 
 		$url = ($_SERVER['SERVER_NAME'] == 'localhost') ? Config::get('autoload','domain/development') : Config::get('autoload','domain/production');
 
-		return $url;
+		$_url = ($str != null) ? $url.'/'.$str : $url;
+
+		return $_url;
 	}
 
 	/**
@@ -46,7 +48,7 @@ class Url {
 	* To know what page are in service
 	* @return filename
 	*/
-	public function page() {
+	public static function page() {
 		$page = basename($_SERVER['PHP_SELF']);
 		return $page;
 	}
@@ -75,7 +77,7 @@ class Url {
 	 * Get Current Url
 	 * @return Url
 	 */
-	public function currentUrl() {
+	public static function currentUrl() {
 
 		$_uri = $this->request_uri;
 		$_url = Url::baseUrl();

@@ -7,6 +7,10 @@
 
 class Input {
 
+	/**
+	 * Request method if has return true
+	 * @return bool
+	 */
 	public static function _method() {
 		switch ($_SERVER['REQUEST_METHOD']) {
 			case 'POST':
@@ -21,6 +25,11 @@ class Input {
 		}
 	}
 
+	/**
+	 * use for return value of input box if error exist
+	 * @param string
+	 * @return string
+	 */
 	public static function set_value($value) {
 
 		if(isset($_POST[$value])) {

@@ -1,6 +1,6 @@
 <?php
-namespace AIS\libraries;
-use AIS\libraries\Database;
+namespace Mark\libraries;
+use Mark\core\Database;
 
 class Validation {
 
@@ -8,10 +8,16 @@ class Validation {
 	private $_error = array();
 	private $db = false;
 
-	function __construct() {
+	private function __construct() {
 		$this->db = Database::getIntance();
 	}
 
+	/**
+	 * validate input field
+	 * @param string (name of input fields)
+	 * @param rules array (set of rules of fields)
+	 * @return bool
+	 */
 	public function validate($source, $items = array()) {
 
 		foreach ($items as $item => $rules) {

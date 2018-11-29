@@ -323,7 +323,7 @@ class Database {
 	/**
 	* returns the last inserted Id as a string
 	*/
-	public function _lastInsertId(){
+	public function InsertId(){
 		return $this->dbh->lastInsertId();
 	}
 

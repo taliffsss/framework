@@ -33,7 +33,6 @@ function gotoDashboard() {
 
 function _send_request_item() {
 	var uri = unique();
-	//var formData = $('#request_item').serialize();
 	var formData = new FormData($('#request_item')[0]);
 	var reqCode = $('input#request_code').val();
 

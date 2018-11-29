@@ -1,33 +1,30 @@
 <?php 
 
-class Unit extends \Mark\core\My_Controller {
-
-	private $db;
+class Unit extends My_Controller {
 
 	function __construct() {
 		parent::__construct();
-		$this->db = new Database;
 	}
 
 	/**
 	 * Insert Unit table & category unit
 	 */
-	public function _addUnit() {
-
-		if($_POST) {
+	public function add() {
+		
+		if(Input::_method()) {
 
 			$rows = $this->_category->get_all_category();
 
 			$data = array(
-				'unit_name' => $this->input->post('uName'),
-				'unit_desc' => $this->input->post('unit_desc'),
-				'created_by' => $this->session->userdata('uid'),
+				'unit_name' => Input::post('uName'),
+				'unit_desc' => Input::post('unit_desc'),
+				'created_by' => Session::userdata('uid'),
 				'created_at' => date('Y-m-d H:i:s')
 			);
 
 			$_insert = $this->_unit->_insert_data($data);
 
-			$id = $this->db->lastInsertId();
+			$id = $this->db->InsertId();
 
 			if($_insert) {
 				foreach ($rows as $key) {
@@ -51,7 +48,7 @@ class Unit extends \Mark\core\My_Controller {
 	 * @return Boolean
 	 */
 	public function _check_unit() {
-		$uname = $this->input->post('uname');
+		$uname = Input::post('uname');
 
 		if(is_string($uname)) {
 
@@ -84,7 +81,7 @@ class Unit extends \Mark\core\My_Controller {
 	 */
 	public function check_unit_name() {
 
-		$uname = $this->input->post('uname');
+		$uname = Input::post('uname');
 
 		if(is_string($uname)) {
 
