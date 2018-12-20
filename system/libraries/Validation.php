@@ -24,7 +24,7 @@ class Validation {
 			foreach ($rules as $rule => $rule_value) {
 				
 				$value = trim($source[$item]);
-				$item = escape($item);
+				$item = htmlentities($item);
 
 				if($rule === 'required' && empty($value)) {
 					$this->addError("{$item} is required");

@@ -1,5 +1,5 @@
 <?php
-use Mark\core\Config;
+namespace Mark\core;
 /**
  * @package Database Class
  * @author 	Mark Anthony Naluz <anthony.naluz15@gmail.com>
@@ -80,8 +80,8 @@ class Token {
 	 * Set hash in Session
 	 */
 	public static function _generate_new_hash() {
-		Session::put(self::$name,self::$_hash);
-		Session::put(self::$time,time());
+		$_SESSION[self::$name] = self::$_hash;
+		$_SESSION[self::$time] = time();
 	}
 
 	/**
@@ -92,7 +92,7 @@ class Token {
 	public function _csrf_is_valid($key) {
 		if(Input::_method()) {
 			if(self::_csrf_time_validity()) {
-				if(Session::get(self::$name) === $key) {
+				if($_SESSION[self::$name] === $key) {
 					return true;
 				} else {
 					self::_generate_new_hash();
@@ -119,7 +119,7 @@ class Token {
 	 */
 	public function _csrf_time_validity() {
 
-		$_csrf = time() - Session::get(self::$time);
+		$_csrf = time() - $_SESSION[self::$time];
 
 		return ($_csrf < self::$expired_at) ? true : false;
 	}

@@ -5,6 +5,7 @@ class Login extends My_Controller {
 
 	function __construct() {
 		parent::__construct();
+		Common::helper('Security');
 	}
 
 	/**
@@ -12,6 +13,9 @@ class Login extends My_Controller {
 	 */
 	public function index() {
 
+		echo ip_address();
+		exit;
+		
 		if(Session::userdata('logged_in')) Url::redirect('dashboard');
 
 		if(Input::_method()) {

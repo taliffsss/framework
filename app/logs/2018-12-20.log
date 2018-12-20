@@ -1,0 +1,22 @@
+[20-Dec-2018 02:58:49 Europe/Berlin] PHP Fatal error:  Uncaught Error: Class 'Routes' not found in D:\local\man\app\config\Router.php:3
+Stack trace:
+#0 D:\local\man\config\config.php(39): require_once()
+#1 D:\local\man\index.php(25): require_once('D:\\local\\man\\co...')
+#2 {main}
+  thrown in D:\local\man\app\config\Router.php on line 3
+[20-Dec-2018 02:59:06 Europe/Berlin] PHP Fatal error:  Uncaught Error: Class 'Routes' not found in D:\local\man\app\config\Router.php:3
+Stack trace:
+#0 D:\local\man\config\config.php(39): require_once()
+#1 D:\local\man\index.php(25): require_once('D:\\local\\man\\co...')
+#2 {main}
+  thrown in D:\local\man\app\config\Router.php on line 3
+[20-Dec-2018 03:00:51 Europe/Berlin] PHP Fatal error:  Uncaught Error: Class 'Config' not found in D:\local\man\system\core\Routes.php:95
+Stack trace:
+#0 D:\local\man\system\core\Routes.php(31): Routes::routePart()
+#1 D:\local\man\system\core\Loader.php(18): Routes::_autoload()
+#2 D:\local\man\system\core\Autoload.php(14): Loader->__construct()
+#3 D:\local\man\system\core\Autoload.php(8): Autoload::_autoload()
+#4 D:\local\man\config\config.php(42): Autoload->__construct()
+#5 D:\local\man\index.php(25): require_once('D:\\local\\man\\co...')
+#6 {main}
+  thrown in D:\local\man\system\core\Routes.php on line 95

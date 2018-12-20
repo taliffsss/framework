@@ -28,6 +28,7 @@ class Controller {
 	function __construct() {
 		$GLOBALS["instances"][] = &$this;
 		$this->_token = new Token;
+		Common::helper('Security');
 	}
 
 }

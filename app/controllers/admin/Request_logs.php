@@ -13,6 +13,7 @@ class Request_logs extends My_Controller {
 	 * homepage of request logs
 	 */
 	public function index() {
+
 		$data['ticker'] = $this->ticker();
 		$data['navbar'] = $this->_navigation_bar();
 		$data['transaction'] = $this->get_all_request_logs();

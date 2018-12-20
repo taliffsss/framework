@@ -1,4 +1,5 @@
 <?php
+use Mark\core\Config;
 
 class Routes {
 
@@ -15,9 +16,11 @@ class Routes {
 	 */
 	public static function add($uri,$methods) {
 
-		self::$_url[] = $uri;
+		$url = str_replace("/", "index", $uri);
 
-		self::$_method[$uri] = $methods;
+		self::$_url[] = $url;
+
+		self::$_method[$url] = $methods;
 
 	}
 
@@ -30,7 +33,7 @@ class Routes {
 
 		$method = str_replace("::", "/", self::$_method);
 
-		$dir = scandir($GLOBALS["autoload"]["path"]["app"].'controllers/');
+		$dir = scandir(Config::get('autoload','path/app').'controllers/');
 
 		//return only a file or folder
 		foreach ($dir as $key => &$value) {
@@ -41,9 +44,9 @@ class Routes {
 
 		//trim slash
 		foreach (self::$_url as &$value) {
+
 			$myUrl[] = rtrim($value,'/');
 		}
-
 
 		//check if class are inside in folder
 		if(in_array(self::$_part, $myUrl)) {
@@ -86,20 +89,30 @@ class Routes {
 	 */
 	private static function routePart() {
 
-		$_uri = rtrim(str_replace("/man/", "", $_SERVER["REQUEST_URI"]), '/');
+		$_uri = ($_SERVER['SERVER_NAME'] == 'localhost') ? str_replace('/'.self::uri(0).'/', "", $_SERVER["REQUEST_URI"]) : rtrim($_SERVER["REQUEST_URI"], '/');
 
-		foreach (self::$_url as $route) {
+		if($_uri == '') {
 
-			$trim = rtrim($route,'/');
-				
-			$key = str_replace(array(':any', ':num'), array('[^/]+', '[0-9]+'), $trim);
+			self::$_part = Config::get('autoload','defaults/method');
 
-			if(preg_match('#^'.$key.'$#', $_uri, $matches)) {
+		} else {
+			foreach (self::$_url as $route) {
 
-				self::$_part = rtrim($route, '/');
+				$trim = rtrim($route,'/');
+					
+				$key = str_replace(array(':any', ':num'), array('[^/]+', '[0-9]+'), $trim);
+
+				if(preg_match('#^'.$key.'$#', $_uri, $matches)) {
+
+					self::$_part = $trim;
+
+				} else {
+
+					self::$_part = $trim;
+
+				}
 
 			}
-
 		}
 	}
 
@@ -112,10 +125,12 @@ class Routes {
 
 		$parts = explode("/", $_SERVER["REQUEST_URI"]);
 
-		if($parts[1] == $GLOBALS["autoload"]["path"]["index"]) {
-			$part++;
-		}
+		$_uri = ($_SERVER['SERVER_NAME'] == 'localhost') ? $parts[2] : $parts[1];
 
+		if($_uri == '') {
+			$part++;
+			
+		}
 		return (isset($parts[$part])) ? $parts[$part] : "";
 	}
 

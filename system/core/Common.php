@@ -30,6 +30,37 @@ class Common {
 			die("Trying to Load Non Existing View");
 		}
 	}
+
+	/**
+	 * Load helper
+	 * @param file
+	 * @return void
+	 */
+	public static function helper($file) {
+
+		$fileCheck = explode(".", $file);
+
+		if(!isset($fileCheck[1])){
+			$file .= ".php";
+		}
+
+		$app = Config::get('autoload','path/app')."helpers/{$file}";
+		$default = Config::get('autoload','path/system')."helpers/{$file}";
+
+		if(file_exists($app)) {
+
+			include_once $app;
+
+		} elseif(file_exists($default)) {
+
+			include_once $default;
+
+		} else {
+
+			die("helper file does not exist");
+
+		}
+	} 
 }
 
 ?>
