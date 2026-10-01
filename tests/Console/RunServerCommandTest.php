@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 
 final class RunServerCommandTest extends TestCase
 {
-    private function run_(array $args): array
+    private function runCommand(array $args): array
     {
         $stream = fopen('php://memory', 'w+');
         $app = new Application(dirname(__DIR__, 2));
@@ -28,7 +28,7 @@ final class RunServerCommandTest extends TestCase
 
     public function testDefaultsToLocalhost8000(): void
     {
-        [$code, $out] = $this->run_(['--dry-run']);
+        [$code, $out] = $this->runCommand(['--dry-run']);
         $this->assertSame(0, $code);
         $this->assertStringContainsString("'-S' '127.0.0.1:8000'", $out);
         $this->assertStringContainsString('/public', $out);
@@ -36,15 +36,15 @@ final class RunServerCommandTest extends TestCase
 
     public function testPortAndHostAreConfigurable(): void
     {
-        [, $out] = $this->run_(['--port=8001', '--dry-run']);
+        [, $out] = $this->runCommand(['--port=8001', '--dry-run']);
         $this->assertStringContainsString("'127.0.0.1:8001'", $out);
-        [, $out] = $this->run_(['--host=0.0.0.0', '--port=9090', '--dry-run']);
+        [, $out] = $this->runCommand(['--host=0.0.0.0', '--port=9090', '--dry-run']);
         $this->assertStringContainsString("'0.0.0.0:9090'", $out);
     }
 
     public function testPortWithSpaceSyntaxWorksToo(): void
     {
-        [$code, $out] = $this->run_(['--port', '8002', '--dry-run']);
+        [$code, $out] = $this->runCommand(['--port', '8002', '--dry-run']);
         $this->assertSame(0, $code);
         $this->assertStringContainsString("'127.0.0.1:8002'", $out);
     }
@@ -53,15 +53,15 @@ final class RunServerCommandTest extends TestCase
     {
         Env::set('APP_PORT', '8123');
         Env::set('APP_HOST', '127.0.0.2');
-        [, $out] = $this->run_(['--dry-run']);
+        [, $out] = $this->runCommand(['--dry-run']);
         $this->assertStringContainsString("'127.0.0.2:8123'", $out);
-        [, $out] = $this->run_(['--port=8001', '--dry-run']);
+        [, $out] = $this->runCommand(['--port=8001', '--dry-run']);
         $this->assertStringContainsString(':8001', $out, 'the flag beats APP_PORT');
     }
 
     public function testWorkersAreForwardedAsAnEnvironmentVariable(): void
     {
-        [$code, $out] = $this->run_(['--workers=4', '--dry-run']);
+        [$code, $out] = $this->runCommand(['--workers=4', '--dry-run']);
         $this->assertSame(0, $code);
         $this->assertStringContainsString('PHP_CLI_SERVER_WORKERS=4', $out);
     }
@@ -69,7 +69,7 @@ final class RunServerCommandTest extends TestCase
     #[\PHPUnit\Framework\Attributes\DataProvider('badInput')]
     public function testInvalidInputIsRejected(array $args): void
     {
-        [$code, $out] = $this->run_([...$args, '--dry-run']);
+        [$code, $out] = $this->runCommand([...$args, '--dry-run']);
         $this->assertSame(1, $code);
         $this->assertNotSame('', trim($out));
     }
@@ -87,7 +87,7 @@ final class RunServerCommandTest extends TestCase
         $server = stream_socket_server('tcp://127.0.0.1:0', $errno, $err);
         $port = (int) substr((string) strrchr((string) stream_socket_get_name($server, false), ':'), 1);
         try {
-            [$code, $out] = $this->run_(["--port={$port}"]);
+            [$code, $out] = $this->runCommand(["--port={$port}"]);
         } finally {
             fclose($server);
         }

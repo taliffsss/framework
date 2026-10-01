@@ -2,11 +2,9 @@
 
 declare(strict_types=1);
 
-/**
- * Read / write splitting. Set DB_READ_HOST (one host or a comma-separated list of replicas) to send SELECTs to replicas;
- * writes, transactions and anything that must see fresh data stay on DB_WRITE_HOST (default: DB_HOST).
- * Leave DB_READ_HOST empty and nothing changes: one connection for everything.
- */
+// Read / write splitting. Set DB_READ_HOST (one host or a comma-separated list of replicas) to send SELECTs to replicas;
+// writes, transactions and anything that must see fresh data stay on DB_WRITE_HOST (default: DB_HOST).
+// Leave DB_READ_HOST empty and nothing changes: one connection for everything.
 
 $split = static function (): array {
     $readHosts = array_values(array_filter(array_map('trim', explode(',', (string) env('DB_READ_HOST', '')))));
