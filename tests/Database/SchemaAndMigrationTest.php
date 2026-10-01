@@ -17,15 +17,16 @@ final class SchemaAndMigrationTest extends TestCase
     public function testRunStatusRollback(): void
     {
         $migrator = new Migrator($this->db(), dirname(__DIR__, 2) . '/database/migrations');
-        $this->assertSame([false, false], array_column($migrator->status(), 'ran'));
+        $total = count(glob(dirname(__DIR__, 2) . '/database/migrations/*.php'));
+        $this->assertSame(array_fill(0, $total, false), array_column($migrator->status(), 'ran'));
 
         $ran = $migrator->run();
-        $this->assertCount(2, $ran);
+        $this->assertCount($total, $ran);
         $schema = $this->db()->schema();
         $this->assertTrue($schema->hasTable('users'));
         $this->assertTrue($schema->hasTable('posts'));
         $this->assertSame([], $migrator->run(), 'idempotent');
-        $this->assertSame([true, true], array_column($migrator->status(), 'ran'));
+        $this->assertSame(array_fill(0, $total, true), array_column($migrator->status(), 'ran'));
 
         $rolled = $migrator->rollback();
         $this->assertSame(array_reverse($ran), $rolled, 'rolls back in reverse order');
