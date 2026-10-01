@@ -18,6 +18,8 @@ final class Router implements RequestHandlerInterface
     private array $routes = [];
     /** @var array<string,Route> */
     private array $named = [];
+    /** @var list<Route> every route in registration order (needed by the route cache) */
+    private array $ordered = [];
     /** @var array<string,string> */
     private array $aliases = [];
     /** @var array<string,list<string>> */
@@ -112,10 +114,59 @@ final class Router implements RequestHandlerInterface
         $route->middleware($middleware);
         $route->groupName = $name;
 
-        foreach ($methods as $method) {
+        $this->register($route);
+        return $route;
+    }
+
+    private function register(Route $route): void
+    {
+        $this->ordered[] = $route;
+        foreach ($route->methods as $method) {
             $this->routes[$method][] = $route;
         }
-        return $route;
+    }
+
+    /**
+     * Serialisable route table for `route:cache`. Closures cannot be cached, so they are rejected up front.
+     *
+     * @return list<array<string,mixed>>
+     */
+    public function export(): array
+    {
+        $closures = [];
+        $out = [];
+        foreach ($this->ordered as $route) {
+            if ($route->action instanceof \Closure || !(is_string($route->action) || (is_array($route->action) && count($route->action) === 2 && is_string($route->action[0]) && is_string($route->action[1])))) {
+                $closures[] = implode('|', $route->methods) . ' ' . $route->uri;
+                continue;
+            }
+            $out[] = [
+                'methods' => $route->methods,
+                'uri' => $route->uri,
+                'action' => $route->action,
+                'middleware' => $route->middleware,
+                'wheres' => $route->wheres,
+                'name' => $route->name,
+                'groupName' => $route->groupName,
+            ];
+        }
+        if ($closures !== []) {
+            throw new \LogicException("Cannot cache routes that use closures:\n  - " . implode("\n  - ", $closures) . "\nMove them into controller classes.");
+        }
+        return $out;
+    }
+
+    /** @param list<array<string,mixed>> $table */
+    public function loadCached(array $table): void
+    {
+        foreach ($table as $r) {
+            $route = new Route($r['methods'], $r['uri'], $r['action']);
+            $route->middleware = $r['middleware'];
+            $route->wheres = $r['wheres'];
+            $route->name = $r['name'];
+            $route->groupName = $r['groupName'];
+            $this->register($route);
+        }
     }
 
     /** @param array{prefix?:string,middleware?:string|list<string>,name?:string} $attributes */

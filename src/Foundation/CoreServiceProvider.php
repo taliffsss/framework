@@ -18,6 +18,9 @@ use Naluz\Security\Jwt;
 use Naluz\Session\ArraySessionHandler;
 use Naluz\Session\FileSessionHandler;
 use Naluz\Session\Store;
+use Naluz\Redis\Client as RedisClient;
+use Naluz\Redis\RedisCache;
+use Naluz\Redis\RedisSessionHandler;
 use Naluz\View\Factory;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\EventDispatcher\ListenerProviderInterface;
@@ -38,9 +41,12 @@ final class CoreServiceProvider extends ServiceProvider
             $c->basePath('storage/logs'),
             (string) $c->make(Repository::class)->get('app.log_level', 'debug')
         ));
-        $app->singleton(CacheInterface::class, fn ($c) => $c->make(Repository::class)->get('app.cache') === 'array'
-            ? new ArrayCache()
-            : new FileCache($c->basePath('storage/cache')));
+        $app->singleton(RedisClient::class, fn ($c) => RedisClient::fromConfig((array) $c->make(Repository::class)->get('redis', [])));
+        $app->singleton(CacheInterface::class, fn ($c) => match ($c->make(Repository::class)->get('app.cache')) {
+            'array' => new ArrayCache(),
+            'redis' => new RedisCache($c->make(RedisClient::class)),
+            default => new FileCache($c->basePath('storage/cache/data')),
+        });
 
         $app->singleton(Dispatcher::class, fn () => new Dispatcher());
         $app->alias(EventDispatcherInterface::class, Dispatcher::class);
@@ -66,9 +72,12 @@ final class CoreServiceProvider extends ServiceProvider
 
         $app->singleton(Store::class, function ($c) {
             $cfg = $c->make(Repository::class);
-            $handler = $cfg->get('session.driver', 'file') === 'array'
-                ? new ArraySessionHandler()
-                : new FileSessionHandler($c->basePath('storage/sessions'), (int) $cfg->get('session.lifetime', 7200));
+            $lifetime = (int) $cfg->get('session.lifetime', 7200);
+            $handler = match ($cfg->get('session.driver', 'file')) {
+                'array' => new ArraySessionHandler(),
+                'redis' => new RedisSessionHandler($c->make(RedisClient::class), $lifetime),
+                default => new FileSessionHandler($c->basePath('storage/sessions'), $lifetime),
+            };
             return new Store($handler);
         });
 

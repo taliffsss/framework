@@ -135,3 +135,30 @@ if (!function_exists('json_for_html')) {
         return json_encode($value, JSON_THROW_ON_ERROR | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
     }
 }
+
+if (!function_exists('logger')) {
+    /** Log a message (info level) or get the PSR-3 logger when called without arguments. */
+    function logger(?string $message = null, array $context = []): mixed
+    {
+        $logger = app(\Psr\Log\LoggerInterface::class);
+        if ($message === null) {
+            return $logger;
+        }
+        $logger->info($message, $context);
+        return null;
+    }
+}
+
+if (!function_exists('storage')) {
+    function storage(?string $disk = null): \Naluz\Storage\Filesystem
+    {
+        return app(\Naluz\Storage\StorageManager::class)->disk($disk);
+    }
+}
+
+if (!function_exists('dispatch')) {
+    function dispatch(\Naluz\Queue\Job $job): void
+    {
+        app(\Naluz\Queue\QueueManager::class)->dispatch($job);
+    }
+}

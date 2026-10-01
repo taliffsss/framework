@@ -11,6 +11,8 @@ return [
     'debug' => (bool) env('APP_DEBUG', false),
     // Throw on accidental lazy loading (N+1). Defaults to on for APP_ENV=local|testing or when debugging.
     'prevent_lazy_loading' => env('PREVENT_LAZY_LOADING'),
+    // Where `php naluz route:cache` writes the compiled route table (ignored while app.debug is true).
+    'routes_cache' => null,
     'url' => env('APP_URL', 'http://localhost'),
     'timezone' => env('APP_TIMEZONE', 'UTC'),
     'key' => env('APP_KEY', ''),

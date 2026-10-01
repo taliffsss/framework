@@ -60,7 +60,13 @@ final class Application extends Container
         date_default_timezone_set((string) $config->get('app.timezone', 'UTC'));
         mb_internal_encoding('UTF-8');
 
-        $classes = [CoreServiceProvider::class, ...(array) $config->get('app.providers', [])];
+        $classes = [
+            CoreServiceProvider::class,
+            \Naluz\Queue\QueueServiceProvider::class,
+            \Naluz\Mail\MailServiceProvider::class,
+            \Naluz\Storage\StorageServiceProvider::class,
+            \Naluz\Schedule\ScheduleServiceProvider::class,
+            ...(array) $config->get('app.providers', [])];
         foreach ($classes as $class) {
             $provider = new $class($this);
             $provider->register();
@@ -81,6 +87,11 @@ final class Application extends Container
         return (bool) $this->make(Repository::class)->get('app.debug', false);
     }
 
+    public function routeCachePath(): string
+    {
+        return (string) ($this->make(Repository::class)->get('app.routes_cache') ?: $this->basePath('storage/cache/routes.php'));
+    }
+
     private function loadRoutes(Repository $config): void
     {
         $router = $this->make(Router::class);
@@ -90,6 +101,20 @@ final class Application extends Container
         foreach ((array) $config->get('app.middleware_groups', []) as $name => $stack) {
             $router->middlewareGroup($name, $stack);
         }
+        // A route cache is ignored while debugging so edits to routes/*.php show up immediately.
+        if (!$config->get('app.debug') && is_file($cache = $this->routeCachePath())) {
+            $table = require $cache;
+            if (is_array($table)) {
+                $router->loadCached($table);
+                return;
+            }
+        }
+        $this->registerRouteFiles($router);
+    }
+
+    /** Include routes/web.php and routes/api.php into the given router. */
+    public function registerRouteFiles(Router $router): void
+    {
         if (is_file($file = $this->basePath('routes/web.php'))) {
             $router->group(['middleware' => ['web']], static function (Router $router) use ($file): void {
                 require $file;
