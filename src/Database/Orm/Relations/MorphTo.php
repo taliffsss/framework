@@ -83,7 +83,10 @@ final class MorphTo extends Relation
             $dict[$r->morphTypeKey()][$r->getKey()] = $r;
         }
         foreach ($models as $m) {
-            $m->setRelation($relation, $dict[$m->getAttribute($this->morphType)][$m->getAttribute($this->morphId)] ?? null);
+            $type = $m->getAttribute($this->morphType);
+            $id = $m->getAttribute($this->morphId);
+            // orphans (NULL type/id) have no owner; never use null as an array key (deprecated in PHP 8.5)
+            $m->setRelation($relation, $type === null || $id === null ? null : ($dict[$type][$id] ?? null));
         }
         return $models;
     }
