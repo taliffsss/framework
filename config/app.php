@@ -23,7 +23,10 @@ return [
     'dont_discover' => [],
 
     /** Extra service providers: classes extending Naluz\Foundation\ServiceProvider. */
-    'providers' => [],
+    'providers' => [
+        App\Providers\AppServiceProvider::class,
+        App\Providers\ObserverServiceProvider::class,
+    ],
 
     /** Runs on every request, outermost first. */
     'middleware' => [

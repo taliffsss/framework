@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+#### Added
+- Sample service providers (`app/Providers/AppServiceProvider`, `ObserverServiceProvider`) registered in `config/app.php`.
+- Model observers: `Model::observe()`, `#[ObservedBy]`, sample `UserObserver` / `PostObserver`, `make:observer`
+  (needs `naluz/framework` ^1.1). See [docs/providers-and-observers.md](docs/providers-and-observers.md).
+
 ## 1.0.0 — first release
 
 Release notes: [docs/releases/v1.0.0.md](docs/releases/v1.0.0.md). The framework core is the separate package
