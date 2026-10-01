@@ -26,7 +26,7 @@ $db->table('users')
    ->join('profiles', 'users.id', '=', 'profiles.user_id')      // leftJoin, rightJoin, crossJoin
    ->groupBy('role')->having('n', '>', 1)
    ->orderBy('name', 'desc')->latest()->limit(10)->offset(20)
-   ->when($request->has('q'), fn ($q) => $q->where('name', 'like', "%{$term}%"))
+   ->when($term !== '', fn ($q) => $q->where('name', 'like', "%{$term}%"))
    ->get();
 ```
 
