@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Observers\UserObserver;
+use Naluz\Database\Orm\Attributes\ObservedBy;
 use Naluz\Database\Orm\HasFactory;
 use Naluz\Database\Orm\Model;
 
+#[ObservedBy(UserObserver::class)]
 class User extends Model
 {
     use HasFactory;

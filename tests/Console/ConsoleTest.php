@@ -88,6 +88,16 @@ final class ConsoleTest extends TestCase
         exec(PHP_BINARY . ' -l ' . escapeshellarg($migration[0]), $o, $rc);
         $this->assertSame(0, $rc);
 
+        $this->assertSame(0, $this->cli(['make:observer', 'OrderObserver'])[0]);
+        $observer = $this->base . '/app/Observers/OrderObserver.php';
+        $code = (string) file_get_contents($observer);
+        $this->assertStringContainsString('namespace App\\Observers;', $code);
+        $this->assertStringContainsString('public function creating(', $code);
+        exec(PHP_BINARY . ' -l ' . escapeshellarg($observer), $o, $rc);
+        $this->assertSame(0, $rc, 'generated observer is valid PHP');
+        $this->assertSame(0, $this->cli(['make:provider', 'PaymentServiceProvider'])[0]);
+        $this->assertFileExists($this->base . '/app/Providers/PaymentServiceProvider.php');
+
         $this->assertSame(1, $this->cli(['make:model', 'Comment'])[0], 'never overwrites');
     }
 

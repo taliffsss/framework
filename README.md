@@ -232,7 +232,7 @@ See [docs/testing.md](docs/testing.md).
 - [Getting started](docs/getting-started.md)
 - [Routing, HTTP & views](docs/http.md)
 - [Database: query builder, ORM, migrations](docs/database.md)
-- [Templates](docs/templates.md) · [Queues](docs/queues.md) · [Mail](docs/mail.md) · [Scheduler](docs/scheduler.md) · [Storage & uploads](docs/storage.md)
+- [Providers & observers](docs/providers-and-observers.md) · [Templates](docs/templates.md) · [Queues](docs/queues.md) · [Mail](docs/mail.md) · [Scheduler](docs/scheduler.md) · [Storage & uploads](docs/storage.md)
 - [HTTP client (Guzzle, PSR-18)](docs/http-client.md) · [Logging & error handling](docs/logging.md)
 - [Model caching](docs/model-cache.md) · [Performance](docs/performance.md) · [Building packages](docs/packages.md)
 - [Security](docs/security.md)
