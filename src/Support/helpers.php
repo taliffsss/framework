@@ -137,10 +137,10 @@ if (!function_exists('json_for_html')) {
 }
 
 if (!function_exists('logger')) {
-    /** Log a message (info level) or get the PSR-3 logger when called without arguments. */
+    /** Log a message (info level) or get the logger (LogManager: ->channel('slack')) when called without arguments. */
     function logger(?string $message = null, array $context = []): mixed
     {
-        $logger = app(\Psr\Log\LoggerInterface::class);
+        $logger = app(\Naluz\Log\LogManager::class);
         if ($message === null) {
             return $logger;
         }

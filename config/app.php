@@ -18,7 +18,6 @@ return [
     'key' => env('APP_KEY', ''),
     'previous_keys' => [],
     'cache' => env('CACHE_DRIVER', 'file'),
-    'log_level' => env('LOG_LEVEL', 'debug'),
 
     /** Composer packages whose auto-discovered providers should NOT be registered (or ['*'] for none). */
     'dont_discover' => [],

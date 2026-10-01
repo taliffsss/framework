@@ -134,7 +134,7 @@ final class ApiTest extends TestCase
     public function testServerErrorsAreLogged(): void
     {
         $dir = sys_get_temp_dir() . '/naluz-log-' . bin2hex(random_bytes(4));
-        $this->app->instance(\Psr\Log\LoggerInterface::class, new \Naluz\Log\FileLogger($dir));
+        $this->app->make(\Naluz\Log\LogManager::class)->extend('null', new \Naluz\Log\FileLogger($dir));
         $this->routes(fn (Router $r) => $r->get('/boom', fn () => throw new \RuntimeException('logged!')), ['prefix' => 'api']);
         $this->json('GET', '/api/boom');
         $log = (string) file_get_contents(glob($dir . '/*.log')[0]);

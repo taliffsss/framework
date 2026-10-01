@@ -5,59 +5,66 @@ declare(strict_types=1);
 namespace Naluz\Log;
 
 use Psr\Log\AbstractLogger;
-use Psr\Log\InvalidArgumentException;
 use Psr\Log\LogLevel;
 
-/** PSR-3 logger writing one file per day, with {placeholder} interpolation. */
+/**
+ * PSR-3 file logger. Daily files (`naluz-2026-01-31.log`, optional retention) or a single file.
+ * If the file cannot be written the record goes to PHP's error_log(), never nowhere.
+ */
 final class FileLogger extends AbstractLogger
 {
-    private const LEVELS = [
-        LogLevel::DEBUG => 0, LogLevel::INFO => 1, LogLevel::NOTICE => 2, LogLevel::WARNING => 3,
-        LogLevel::ERROR => 4, LogLevel::CRITICAL => 5, LogLevel::ALERT => 6, LogLevel::EMERGENCY => 7,
-    ];
+    private bool $pruned = false;
 
-    public function __construct(private readonly string $directory, private readonly string $minLevel = LogLevel::DEBUG)
-    {
+    /**
+     * @param int $days daily files older than this are deleted (0 = keep everything)
+     * @param string|null $file fixed file name (disables daily rotation), e.g. "app.log"
+     */
+    public function __construct(
+        private readonly string $directory,
+        private readonly string $minLevel = LogLevel::DEBUG,
+        private readonly bool $daily = true,
+        private readonly int $days = 0,
+        private readonly ?string $file = null,
+        private readonly Formatter $formatter = new LineFormatter(),
+    ) {
+        Levels::assert($minLevel);
     }
 
     public function log($level, string|\Stringable $message, array $context = []): void
     {
-        if (!isset(self::LEVELS[$level])) {
-            throw new InvalidArgumentException("Unknown log level [{$level}].");
-        }
-        if (self::LEVELS[$level] < self::LEVELS[$this->minLevel]) {
+        $level = Levels::assert((string) $level);
+        if (!Levels::atLeast($level, $this->minLevel)) {
             return;
         }
+        $line = $this->formatter->format($level, (string) $message, $context);
         $writable = is_dir($this->directory) || @mkdir($this->directory, 0775, true) || is_dir($this->directory);
-        $line = sprintf(
-            "[%s] %s: %s%s\n",
-            date('Y-m-d H:i:s'),
-            strtoupper($level),
-            $this->interpolate((string) $message, $context),
-            isset($context['exception']) && $context['exception'] instanceof \Throwable
-                ? ' ' . $this->describe($context['exception']) : ''
-        );
-        // logging must never take the app down — but it must not lose messages silently either:
-        // when the log file is unwritable, fall back to PHP's own error log (stderr / error_log ini setting).
-        if (!$writable || @file_put_contents($this->directory . '/naluz-' . date('Y-m-d') . '.log', $line, FILE_APPEND | LOCK_EX) === false) {
+        // never lose a record silently: unwritable log file -> PHP's own error log
+        if (!$writable || @file_put_contents($this->path(), $line, FILE_APPEND | LOCK_EX) === false) {
             error_log(rtrim($line));
+            return;
         }
+        $this->prune();
     }
 
-    private function interpolate(string $message, array $context): string
+    private function path(): string
     {
-        $replace = [];
-        foreach ($context as $key => $value) {
-            if (is_scalar($value) || $value instanceof \Stringable || $value === null) {
-                // strip newlines so user-controlled values cannot forge log lines
-                $replace['{' . $key . '}'] = str_replace(["\r", "\n"], ' ', (string) $value);
+        if ($this->file !== null) {
+            return $this->directory . '/' . basename($this->file);
+        }
+        return $this->directory . '/naluz' . ($this->daily ? '-' . date('Y-m-d') : '') . '.log';
+    }
+
+    private function prune(): void
+    {
+        if ($this->pruned || !$this->daily || $this->days <= 0 || $this->file !== null) {
+            return;
+        }
+        $this->pruned = true; // at most once per process
+        $cutoff = time() - $this->days * 86400;
+        foreach (glob($this->directory . '/naluz-????-??-??.log') ?: [] as $old) {
+            if (filemtime($old) < $cutoff) {
+                @unlink($old);
             }
         }
-        return strtr(str_replace(["\r", "\n"], ' ', $message), $replace);
-    }
-
-    private function describe(\Throwable $e): string
-    {
-        return sprintf('(%s: %s at %s:%d)', $e::class, str_replace("\n", ' ', $e->getMessage()), $e->getFile(), $e->getLine());
     }
 }

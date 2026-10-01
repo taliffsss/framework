@@ -10,7 +10,6 @@ use Naluz\Config\Repository;
 use Naluz\Database\Connection;
 use Naluz\Database\DatabaseManager;
 use Naluz\Events\Dispatcher;
-use Naluz\Log\FileLogger;
 use Naluz\Routing\Router;
 use Naluz\Security\Encrypter;
 use Naluz\Security\Hasher;
@@ -42,10 +41,9 @@ final class CoreServiceProvider extends ServiceProvider
         $app->singleton(DatabaseManager::class, fn ($c) => new DatabaseManager((array) $c->make(Repository::class)->get('database', ['default' => 'sqlite', 'connections' => []])));
         $app->bind(Connection::class, fn ($c) => $c->make(DatabaseManager::class)->connection());
 
-        $app->singleton(LoggerInterface::class, fn ($c) => new FileLogger(
-            $c->basePath('storage/logs'),
-            (string) $c->make(Repository::class)->get('app.log_level', 'debug')
-        ));
+        // PSR-3: the LogManager (channels from config/logging.php) is the application logger
+        $app->singleton(\Naluz\Log\LogManager::class, fn ($c) => new \Naluz\Log\LogManager($c, $c->make(Repository::class)));
+        $app->alias(LoggerInterface::class, \Naluz\Log\LogManager::class);
         $app->singleton(RedisClient::class, fn ($c) => RedisClient::fromConfig((array) $c->make(Repository::class)->get('redis', [])));
         $app->singleton(CacheInterface::class, fn ($c) => match ($c->make(Repository::class)->get('app.cache')) {
             'array' => new ArrayCache(),

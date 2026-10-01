@@ -46,6 +46,7 @@ abstract class TestCase extends BaseTestCase
             'database.default' => 'sqlite',
             'database.connections.sqlite.database' => ':memory:',
             'session.driver' => 'array',
+            'logging.default' => 'null', // tests never write to storage/logs; assert via LogManager::extend()
             'security.jwt.secret' => str_repeat('s', 40),
             'security.jwt.issuer' => 'tests',
         ];
