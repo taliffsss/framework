@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+         cacheDirectory=".phpunit.cache"
+         failOnWarning="true"
+         failOnRisky="true"
+         failOnDeprecation="true">
+    <testsuites>
+        <testsuite name="Unit"><directory>tests/Unit</directory></testsuite>
+        <testsuite name="Database"><directory>tests/Database</directory></testsuite>
+        <testsuite name="Http"><directory>tests/Http</directory></testsuite>
+        <testsuite name="Security"><directory>tests/Security</directory></testsuite>
+        <testsuite name="Queue"><directory>tests/Queue</directory></testsuite>
+        <testsuite name="Mail"><directory>tests/Mail</directory></testsuite>
+        <testsuite name="Storage"><directory>tests/Storage</directory></testsuite>
+        <testsuite name="Schedule"><directory>tests/Schedule</directory></testsuite>
+        <testsuite name="NoSql"><directory>tests/NoSql</directory></testsuite>
+        <testsuite name="Console"><directory>tests/Console</directory></testsuite>
+    </testsuites>
+    <php>
+        <env name="APP_ENV" value="testing"/>
+    </php>
+    <source>
+        <include><directory>vendor/naluz/framework/src</directory></include>
+    </source>
+</phpunit>

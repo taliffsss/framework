@@ -1,0 +1,12 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# Never serve dotfiles or PHP source other than the front controller
+<FilesMatch "^\.(?!well-known)">
+    Require all denied
+</FilesMatch>
+Options -Indexes

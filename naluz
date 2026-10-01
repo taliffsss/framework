@@ -1,0 +1,17 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Naluz\Console\Kernel;
+
+if (PHP_SAPI !== 'cli') {
+    exit('The naluz command must be run from the command line.');
+}
+
+/** @var Naluz\Foundation\Application $app */
+$app = require __DIR__ . '/bootstrap/app.php';
+
+$app->registerErrorHandler();
+
+exit((new Kernel($app))->run($argv));
