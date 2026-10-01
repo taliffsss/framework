@@ -41,6 +41,7 @@ return [
         'throttle' => Middleware\Throttle::class,
         'auth' => Middleware\Authenticate::class,
         'jwt' => Middleware\AuthenticateJwt::class,
+        'jwt.optional' => \App\Http\Middleware\OptionalJwt::class,
     ],
 
     /** `web` wraps routes/web.php; `api` wraps routes/api.php (stateless: no cookies, no CSRF). */
