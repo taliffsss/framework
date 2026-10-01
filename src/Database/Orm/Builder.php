@@ -87,6 +87,9 @@ class Builder
         if ($cache === null || $connection->transactionLevel() > 0 || $query->hasRawSql() || !$cache->canCache($query->tables())) {
             return $load();
         }
+        if ($cache->readsFromPrimary()) {
+            $query->useWritePdo(); // $load runs on this same query object: misses are read from the primary
+        }
         [$sql, $bindings] = $query->readPlan($kind, $args);
         return $cache->remember(
             $connection->name(),

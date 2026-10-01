@@ -49,6 +49,8 @@ final class ModelCache
      * @param bool $recache re-run recently cached queries after a write commits
      * @param int $recacheLimit how many distinct recent queries are remembered / re-run (bounds the cost of a write)
      * @param int $recacheDebounce seconds during which a burst of writes triggers re-caching only once
+     * @param bool $readFromPrimary with read replicas, cache misses and re-caching read the primary, so a lagging replica
+     *                              can never put stale rows into the cache for the next 5 minutes
      * @param bool $fallback keep working (straight from the database) when the cache store throws
      */
     public function __construct(
@@ -64,6 +66,7 @@ final class ModelCache
         private readonly int $recacheDebounce = 2,
         private readonly bool $fallback = true,
         private readonly ?LoggerInterface $logger = null,
+        private readonly bool $readFromPrimary = true,
     ) {
         $this->exclude = array_map('strtolower', $excludeTables);
     }
@@ -71,6 +74,11 @@ final class ModelCache
     public function defaultTtl(): int
     {
         return $this->ttl;
+    }
+
+    public function readsFromPrimary(): bool
+    {
+        return $this->readFromPrimary;
     }
 
     /** Needed for re-caching: how to get the connection a remembered query belongs to. */
@@ -265,7 +273,7 @@ final class ModelCache
     {
         $connection = ($this->connections)($entry['conn']);
         ['kind' => $kind, 'sql' => $sql, 'bindings' => $bindings, 'args' => $args] = $entry['plan'];
-        $rows = $connection->select($sql, $bindings);
+        $rows = $connection->select($sql, $bindings, $this->readFromPrimary);
         $value = self::shape($kind, $rows, $args);
 
         $versions = $this->versions($entry['conn'], $entry['tables']);

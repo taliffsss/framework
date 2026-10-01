@@ -20,6 +20,10 @@ return [
     'recache_limit' => (int) env('MODEL_CACHE_RECACHE_LIMIT', 20),      // distinct recent queries remembered / re-run per write
     'recache_debounce' => (int) env('MODEL_CACHE_RECACHE_DEBOUNCE', 2), // seconds: a burst of writes re-caches once
 
+    // With read replicas: cache misses and re-caching read the PRIMARY, so replication lag can never put stale rows
+    // into the cache. Reads that hit the cache never touch any database.
+    'read_from_primary' => filter_var(env('MODEL_CACHE_READ_FROM_PRIMARY', true), FILTER_VALIDATE_BOOLEAN),
+
     // If the cache store is down (e.g. Redis), keep serving from the database instead of failing requests.
     'fallback' => filter_var(env('MODEL_CACHE_FALLBACK', true), FILTER_VALIDATE_BOOLEAN),
 

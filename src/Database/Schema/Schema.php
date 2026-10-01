@@ -96,9 +96,9 @@ final class Schema
     public function hasTable(string $table): bool
     {
         return match ($this->db->driver()) {
-            'sqlite' => $this->db->selectOne("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?", [$table]) !== null,
-            'pgsql' => $this->db->selectOne('SELECT 1 FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = ?', [$table]) !== null,
-            default => $this->db->selectOne('SELECT 1 FROM information_schema.tables WHERE table_schema = database() AND table_name = ?', [$table]) !== null,
+            'sqlite' => $this->db->selectOne("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?", [$table], true) !== null,
+            'pgsql' => $this->db->selectOne('SELECT 1 FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = ?', [$table], true) !== null,
+            default => $this->db->selectOne('SELECT 1 FROM information_schema.tables WHERE table_schema = database() AND table_name = ?', [$table], true) !== null,
         };
     }
 

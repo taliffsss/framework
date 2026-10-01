@@ -29,6 +29,8 @@ class Builder
     public ?int $limit = null;
     public ?int $offset = null;
     public array $updateValues = [];
+    /** Read this query from the primary even when read replicas are configured. */
+    public bool $useWrite = false;
 
     public function __construct(public readonly Connection $connection)
     {
@@ -284,6 +286,13 @@ class Builder
         return $this;
     }
 
+    /** Force this read onto the primary (write) connection: use it when a lagging replica would give a wrong answer. */
+    public function useWritePdo(bool $value = true): static
+    {
+        $this->useWrite = $value;
+        return $this;
+    }
+
     public function newQuery(): static
     {
         return (new static($this->connection))->from($this->from ?? '');
@@ -436,7 +445,7 @@ class Builder
     /** @return Collection<int,array<string,mixed>> */
     public function get(): Collection
     {
-        return new Collection($this->connection->select($this->toSql(), $this->getBindings()));
+        return new Collection($this->connection->select($this->toSql(), $this->getBindings(), $this->useWrite));
     }
 
     public function first(): ?array
@@ -540,7 +549,7 @@ class Builder
     /** Stream rows one at a time with constant memory. */
     public function cursor(): \Generator
     {
-        yield from $this->connection->cursor($this->toSql(), $this->getBindings());
+        yield from $this->connection->cursor($this->toSql(), $this->getBindings(), $this->useWrite);
     }
 
     // ---------------------------------------------------------------- writing

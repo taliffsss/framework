@@ -34,7 +34,8 @@ final class ModelCacheServiceProvider extends ServiceProvider
                 recacheLimit: (int) $cfg->get('model_cache.recache_limit', 20),
                 recacheDebounce: (int) $cfg->get('model_cache.recache_debounce', 2),
                 fallback: (bool) $cfg->get('model_cache.fallback', true),
-                logger: $c->make(\Psr\Log\LoggerInterface::class)
+                logger: $c->make(\Psr\Log\LoggerInterface::class),
+                readFromPrimary: (bool) $cfg->get('model_cache.read_from_primary', true)
             );
         });
     }

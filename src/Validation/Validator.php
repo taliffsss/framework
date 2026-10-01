@@ -217,7 +217,7 @@ final class Validator
             throw new \LogicException('A database connection is required for unique/exists rules.');
         }
         $column = $p[1] ?? preg_replace('/^.*\./', '', $field);
-        $q = $this->db->table($p[0])->where($column, '=', $value);
+        $q = $this->db->table($p[0])->useWritePdo()->where($column, '=', $value); // primary: replica lag must not allow duplicates
         if ($unique && isset($p[2]) && $p[2] !== '') {
             $q->where($p[3] ?? 'id', '!=', $p[2]);
         }

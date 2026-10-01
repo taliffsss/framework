@@ -11,13 +11,28 @@ use Naluz\Database\Schema\Schema;
 
 /**
  * Thin PDO wrapper: always prepared statements, lazy connect, nested transactions
- * (savepoints), query listeners.
+ * (savepoints), query listeners, and optional READ / WRITE splitting.
+ *
+ * With read replicas configured there are two independent PDO sessions: the write connection (primary) and a read
+ * connection (a replica, chosen from a pool with failover). They never share state, a read connection is opened
+ * read-only, and a read is routed to the PRIMARY whenever a replica could give a wrong answer:
+ *   - inside a transaction (you must see your own uncommitted writes),
+ *   - after this process has written, while `sticky` is on (read-your-writes despite replication lag),
+ *   - for statements that are really writes (`INSERT … RETURNING`) or take locks (`FOR UPDATE`),
+ *   - when asked explicitly: `useWritePdo()` on a query, or `usingWritePdo(fn)` around a block.
  */
 class Connection
 {
     private ?\PDO $pdo = null;
     private ?\Closure $factory = null;
     private int $transactions = 0;
+    private ?\PDO $readPdo = null;
+    /** @var list<\Closure():\PDO> one factory per read replica */
+    private array $readFactories = [];
+    private bool $recordsModified = false;
+    private int $forceWrite = 0;
+    private int $readFailedAt = 0;
+    private const READ_RETRY_SECONDS = 30;
     /** @var list<callable(string,bool,?int):void> */
     private array $writeListeners = [];
     /** @var list<string> write statements issued inside the current transaction */
@@ -28,15 +43,109 @@ class Connection
     private array $listeners = [];
     private readonly Grammar $grammar;
 
-    /** @param \PDO|\Closure():\PDO $pdo */
-    public function __construct(\PDO|\Closure $pdo, private readonly string $driver, private readonly string $name = 'default')
-    {
+    /**
+     * @param \PDO|\Closure():\PDO $pdo the write connection
+     * @param \PDO|\Closure():\PDO|list<\Closure():\PDO>|null $read read replica(s); null = no splitting
+     * @param bool $sticky after a write, send reads to the primary for the rest of this process (read-your-writes)
+     * @param bool $readFallback if every replica is unreachable, read from the primary instead of failing
+     * @param 'random'|'ordered' $readStrategy spread reads randomly over replicas, or try them in the listed order
+     */
+    public function __construct(
+        \PDO|\Closure $pdo,
+        private readonly string $driver,
+        private readonly string $name = 'default',
+        \PDO|\Closure|array|null $read = null,
+        private readonly bool $sticky = true,
+        private readonly bool $readFallback = true,
+        private readonly string $readStrategy = 'random',
+    ) {
         if ($pdo instanceof \PDO) {
             $this->pdo = $pdo;
         } else {
             $this->factory = $pdo;
         }
+        if ($read instanceof \PDO) {
+            $this->readPdo = $read;
+        } elseif ($read instanceof \Closure) {
+            $this->readFactories = [$read];
+        } elseif (is_array($read)) {
+            $this->readFactories = array_values($read);
+        }
         $this->grammar = new Grammar($driver);
+    }
+
+    /** True when reads and writes use different connections. */
+    public function hasReadConnection(): bool
+    {
+        return $this->readPdo !== null || $this->readFactories !== [];
+    }
+
+    /**
+     * The PDO a read would use right now (a replica, or the primary when splitting is off / a replica is down).
+     * Replicas are tried in random or listed order; unreachable ones are skipped.
+     */
+    public function readPdo(): \PDO
+    {
+        if ($this->readPdo !== null && $this->readPdo !== $this->pdo) {
+            return $this->readPdo;
+        }
+        if ($this->readFactories === []) {
+            return $this->pdo();
+        }
+        // After a total replica outage we run on the primary, but try the replicas again after a short pause
+        if ($this->readPdo === $this->pdo && $this->readFailedAt !== 0 && time() - $this->readFailedAt < self::READ_RETRY_SECONDS) {
+            return $this->pdo();
+        }
+        $order = array_keys($this->readFactories);
+        if ($this->readStrategy === 'random') {
+            for ($i = count($order) - 1; $i > 0; $i--) {
+                $j = random_int(0, $i);
+                [$order[$i], $order[$j]] = [$order[$j], $order[$i]];
+            }
+        }
+        $last = null;
+        foreach ($order as $i) {
+            try {
+                $this->readFailedAt = 0;
+                return $this->readPdo = ($this->readFactories[$i])();
+            } catch (\PDOException $e) {
+                $last = $e;
+            }
+        }
+        if (!$this->readFallback) {
+            throw new QueryException('(connecting to a read replica)', [], $last);
+        }
+        error_log('[naluz] all read replicas of connection [' . $this->name . '] are unreachable; reading from the primary: ' . $last?->getMessage());
+        $this->readFailedAt = time();
+        return $this->readPdo = $this->pdo();
+    }
+
+    /** Run a block with every read going to the primary (migrations, queue polling, uniqueness checks…). */
+    public function usingWritePdo(\Closure $callback): mixed
+    {
+        $this->forceWrite++;
+        try {
+            return $callback($this);
+        } finally {
+            $this->forceWrite--;
+        }
+    }
+
+    /** Does this statement have to run on the primary even though it looks like a read? */
+    public static function requiresWrite(string $sql): bool
+    {
+        return self::isWrite($sql)
+            || preg_match('/\bFOR\s+(UPDATE|SHARE|NO\s+KEY\s+UPDATE|KEY\s+SHARE)\b|\bLOCK\s+IN\s+SHARE\s+MODE\b|\bWITH\s*\(\s*(UPDLOCK|HOLDLOCK|XLOCK|ROWLOCK)/i', $sql) === 1;
+    }
+
+    private function readsUsePrimary(string $sql, bool $force): bool
+    {
+        return !$this->hasReadConnection()
+            || $force
+            || $this->forceWrite > 0
+            || $this->transactions > 0
+            || ($this->sticky && $this->recordsModified)
+            || self::requiresWrite($sql);
     }
 
     public function pdo(): \PDO
@@ -88,16 +197,19 @@ class Connection
         return new Expression($sql);
     }
 
-    /** @return list<array<string,mixed>> */
-    public function select(string $sql, array $bindings = []): array
+    /**
+     * @param bool $useWritePdo force this read onto the primary
+     * @return list<array<string,mixed>>
+     */
+    public function select(string $sql, array $bindings = [], bool $useWritePdo = false): array
     {
-        return $this->run($sql, $bindings, static fn (\PDOStatement $s) => $s->fetchAll(\PDO::FETCH_ASSOC));
+        return $this->run($sql, $bindings, static fn (\PDOStatement $s) => $s->fetchAll(\PDO::FETCH_ASSOC), $useWritePdo, true);
     }
 
     /** @return \Generator<int,array<string,mixed>> */
-    public function cursor(string $sql, array $bindings = []): \Generator
+    public function cursor(string $sql, array $bindings = [], bool $useWritePdo = false): \Generator
     {
-        $stmt = $this->prepare($sql, $bindings);
+        $stmt = $this->prepare($sql, $bindings, $this->readsUsePrimary($sql, $useWritePdo) ? $this->pdo() : $this->readPdo());
         try {
             while (($row = $stmt->fetch(\PDO::FETCH_ASSOC)) !== false) {
                 yield $row;
@@ -107,9 +219,9 @@ class Connection
         }
     }
 
-    public function selectOne(string $sql, array $bindings = []): ?array
+    public function selectOne(string $sql, array $bindings = [], bool $useWritePdo = false): ?array
     {
-        return $this->select($sql, $bindings)[0] ?? null;
+        return $this->select($sql, $bindings, $useWritePdo)[0] ?? null;
     }
 
     /** Execute INSERT/UPDATE/DELETE and return affected rows. */
@@ -129,11 +241,11 @@ class Connection
         return (string) $this->pdo()->lastInsertId($sequence);
     }
 
-    private function prepare(string $sql, array $bindings): \PDOStatement
+    private function prepare(string $sql, array $bindings, ?\PDO $pdo = null): \PDOStatement
     {
         $start = microtime(true);
         try {
-            $stmt = $this->pdo()->prepare($sql);
+            $stmt = ($pdo ?? $this->pdo())->prepare($sql);
             foreach (array_values($bindings) as $i => $value) {
                 $stmt->bindValue($i + 1, $value, match (true) {
                     is_int($value) => \PDO::PARAM_INT,
@@ -149,6 +261,9 @@ class Connection
         foreach ($this->listeners as $listener) {
             $listener($sql, $bindings, (microtime(true) - $start) * 1000);
         }
+        if (self::isWrite($sql)) {
+            $this->recordsModified = true; // from now on (sticky) reads must see the primary
+        }
         if ($this->writeListeners !== [] && self::isWrite($sql)) {
             // announced after the statement has been fully consumed (see run()), so listeners may run queries safely
             $this->queuedWrites[] = [$sql, $stmt->rowCount()];
@@ -161,9 +276,10 @@ class Connection
      * @param \Closure(\PDOStatement):T $fetch
      * @return T
      */
-    private function run(string $sql, array $bindings, \Closure $fetch): mixed
+    private function run(string $sql, array $bindings, \Closure $fetch, bool $useWritePdo = false, bool $isRead = false): mixed
     {
-        $stmt = $this->prepare($sql, $bindings);
+        $pdo = $isRead && !$this->readsUsePrimary($sql, $useWritePdo) ? $this->readPdo() : $this->pdo();
+        $stmt = $this->prepare($sql, $bindings, $pdo);
         try {
             return $fetch($stmt);
         } finally {

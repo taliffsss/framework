@@ -43,6 +43,7 @@ final class DatabaseQueue implements Queue
         $now = time();
         for ($i = 0; $i < 5; $i++) { // lost a race → try the next candidate
             $row = $this->db->table($this->table)
+                ->useWritePdo() // never poll a lagging replica: it could hand the same job to two workers
                 ->where('queue', $queue)
                 ->where('available_at', '<=', $now)
                 ->where(fn ($q) => $q->whereNull('reserved_at')->orWhere('reserved_at', '<=', $now - $this->retryAfter))
@@ -73,6 +74,6 @@ final class DatabaseQueue implements Queue
 
     public function size(string $queue = 'default'): int
     {
-        return $this->db->table($this->table)->where('queue', $queue)->count();
+        return $this->db->table($this->table)->useWritePdo()->where('queue', $queue)->count();
     }
 }

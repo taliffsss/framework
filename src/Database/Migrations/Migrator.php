@@ -19,7 +19,7 @@ final class Migrator
     {
         $this->ensureTable();
         $ran = $this->ran();
-        $batch = (int) $this->db->table(self::TABLE)->max('batch') + 1;
+        $batch = (int) $this->table()->max('batch') + 1;
         $done = [];
         foreach ($this->files() as $name => $file) {
             if (in_array($name, $ran, true)) {
@@ -28,7 +28,7 @@ final class Migrator
             $migration = $this->load($file);
             $up = fn () => $migration->up($this->db->schema());
             $this->db->transactionalDdl() ? $this->db->transaction($up) : $up();
-            $this->db->table(self::TABLE)->insert(['migration' => $name, 'batch' => $batch]);
+            $this->table()->insert(['migration' => $name, 'batch' => $batch]);
             $done[] = $name;
         }
         return $done;
@@ -41,11 +41,11 @@ final class Migrator
         $files = $this->files();
         $rolled = [];
         for ($i = 0; $i < $steps; $i++) {
-            $batch = (int) $this->db->table(self::TABLE)->max('batch');
+            $batch = (int) $this->table()->max('batch');
             if ($batch === 0) {
                 break;
             }
-            $names = $this->db->table(self::TABLE)->where('batch', $batch)->orderBy('id', 'desc')->pluck('migration')->all();
+            $names = $this->table()->where('batch', $batch)->orderBy('id', 'desc')->pluck('migration')->all();
             foreach ($names as $name) {
                 if (!isset($files[$name])) {
                     throw new \RuntimeException("Migration file for [{$name}] is missing.");
@@ -53,7 +53,7 @@ final class Migrator
                 $migration = $this->load($files[$name]);
                 $down = fn () => $migration->down($this->db->schema());
                 $this->db->transactionalDdl() ? $this->db->transaction($down) : $down();
-                $this->db->table(self::TABLE)->where('migration', $name)->delete();
+                $this->table()->where('migration', $name)->delete();
                 $rolled[] = $name;
             }
         }
@@ -68,10 +68,16 @@ final class Migrator
         return array_map(fn (string $n) => ['migration' => $n, 'ran' => in_array($n, $ran, true)], array_keys($this->files()));
     }
 
+    /** The migrations table is always read from the primary: a lagging replica could make a migration run twice. */
+    private function table(): \Naluz\Database\Query\Builder
+    {
+        return $this->db->table(self::TABLE)->useWritePdo();
+    }
+
     /** @return list<string> */
     private function ran(): array
     {
-        return $this->db->table(self::TABLE)->orderBy('id')->pluck('migration')->all();
+        return $this->table()->orderBy('id')->pluck('migration')->all();
     }
 
     /** @return array<string,string> name => path, sorted */
