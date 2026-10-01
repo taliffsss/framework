@@ -36,3 +36,13 @@
 ### Changed
 - `FileLogger` falls back to `error_log()` when the log file can't be written, instead of dropping the message.
 - Code reformatted to PSR-12.
+
+## Unreleased (logging)
+
+### Added
+- Channel-based logging (`config/logging.php`): `daily` (with retention), `single`, `stderr`/`stdout`, `errorlog`, `slack`,
+  `stack`, `null`, `custom`; per-channel levels; JSON or line format; `logger()->channel('slack')`.
+- `SlackLogger`: critical+ by default, escaped content, no traces unless enabled, never throws, webhook URL validated.
+
+### Changed
+- `LoggerInterface` now resolves to `LogManager`; `app.log_level` was replaced by `logging.channels.*.level` (`LOG_LEVEL`).

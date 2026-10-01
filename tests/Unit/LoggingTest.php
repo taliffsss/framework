@@ -169,7 +169,7 @@ final class LoggingTest extends TestCase
         $this->assertSame('RuntimeException', $body['attachments'][0]['fields'][0]['value']);
         $this->assertStringNotContainsString('#0', json_encode($body), 'no stack trace by default');
         $this->assertStringNotContainsString('/tests/', json_encode($body), 'no server file paths in the message');
-        $this->assertSame('LoggingTest.php:' . $body['attachments'][0]['fields'][1]['value'] === '' ? '' : $body['attachments'][0]['fields'][1]['value'], $body['attachments'][0]['fields'][1]['value']);
+        $this->assertMatchesRegularExpression('/^LoggingTest\.php:\d+$/', $body['attachments'][0]['fields'][1]['value']);
     }
 
     public function testSlackEscapesUserControlledContentToPreventPingsAndLinks(): void
