@@ -28,9 +28,7 @@ final class FileLogger extends AbstractLogger
         if (self::LEVELS[$level] < self::LEVELS[$this->minLevel]) {
             return;
         }
-        if (!is_dir($this->directory) && !@mkdir($this->directory, 0775, true) && !is_dir($this->directory)) {
-            return; // logging must never take the app down
-        }
+        $writable = is_dir($this->directory) || @mkdir($this->directory, 0775, true) || is_dir($this->directory);
         $line = sprintf(
             "[%s] %s: %s%s\n",
             date('Y-m-d H:i:s'),
@@ -39,7 +37,11 @@ final class FileLogger extends AbstractLogger
             isset($context['exception']) && $context['exception'] instanceof \Throwable
                 ? ' ' . $this->describe($context['exception']) : ''
         );
-        @file_put_contents($this->directory . '/naluz-' . date('Y-m-d') . '.log', $line, FILE_APPEND | LOCK_EX);
+        // logging must never take the app down — but it must not lose messages silently either:
+        // when the log file is unwritable, fall back to PHP's own error log (stderr / error_log ini setting).
+        if (!$writable || @file_put_contents($this->directory . '/naluz-' . date('Y-m-d') . '.log', $line, FILE_APPEND | LOCK_EX) === false) {
+            error_log(rtrim($line));
+        }
     }
 
     private function interpolate(string $message, array $context): string

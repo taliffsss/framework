@@ -148,7 +148,7 @@ class Container implements ContainerInterface
                     try {
                         $args[] = $this->make($type->getName());
                         continue;
-                    } catch (NotFoundException|ContainerException $e) {
+                    } catch (NotFoundException | ContainerException $e) {
                         if (!$param->isOptional() && !$type->allowsNull()) {
                             throw $e;
                         }

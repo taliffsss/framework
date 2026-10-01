@@ -39,6 +39,8 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y -qq redis-server && sudo systemctl disable --now redis-server || true
       - run: composer install --no-interaction --prefer-dist
       - run: composer validate --strict --no-check-lock
+      - name: Coding standard (PSR-12; line length is a soft-limit warning)
+        run: vendor/bin/phpcs --runtime-set ignore_warnings_on_exit 1 -q
       - run: vendor/bin/phpunit --display-deprecations
       - name: Smoke-test the CLI
         run: |

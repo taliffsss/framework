@@ -52,9 +52,14 @@ final class RedisQueue implements Queue
     {
         $now = time();
         $raw = $this->redis->command(
-            'EVAL', self::POP, 3,
-            $this->key($queue), $this->key($queue, ':delayed'), $this->key($queue, ':reserved'),
-            $now, $now + $this->retryAfter
+            'EVAL',
+            self::POP,
+            3,
+            $this->key($queue),
+            $this->key($queue, ':delayed'),
+            $this->key($queue, ':reserved'),
+            $now,
+            $now + $this->retryAfter
         );
         if (!is_string($raw)) {
             return null;

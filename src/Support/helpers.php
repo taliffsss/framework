@@ -112,7 +112,7 @@ if (!function_exists('csrf_field')) {
 if (!function_exists('now')) {
     function now(): DateTimeImmutable
     {
-        return new DateTimeImmutable('now', new DateTimeZone(config('app.timezone', 'UTC')));
+        return app(\Psr\Clock\ClockInterface::class)->now();
     }
 }
 
@@ -160,5 +160,13 @@ if (!function_exists('dispatch')) {
     function dispatch(\Naluz\Queue\Job $job): void
     {
         app(\Naluz\Queue\QueueManager::class)->dispatch($job);
+    }
+}
+
+if (!function_exists('http')) {
+    /** The HTTP client wrapper (Guzzle via PSR-18): `http()->get($url)`. */
+    function http(): \Naluz\Http\Client\Http
+    {
+        return app(\Naluz\Http\Client\Http::class);
     }
 }

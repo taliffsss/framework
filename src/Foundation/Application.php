@@ -163,9 +163,19 @@ final class Application extends Container
         }
     }
 
+    /** Log PHP warnings, uncaught exceptions and fatal errors (see ErrorHandler). Called by run() and the CLI. */
+    public function registerErrorHandler(): ErrorHandler
+    {
+        $this->boot();
+        $handler = new ErrorHandler($this->make(\Psr\Log\LoggerInterface::class), $this->isDebug());
+        $handler->register();
+        return $handler;
+    }
+
     /** Capture the current HTTP request, handle it and send the response. */
     public function run(): void
     {
+        $this->registerErrorHandler();
         $request = Request::capture();
         (new Emitter())->emit($this->handle($request), $request->getMethod() === 'HEAD');
     }

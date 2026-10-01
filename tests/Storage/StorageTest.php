@@ -79,13 +79,15 @@ final class StorageTest extends TestCase
     #[DataProvider('hostilePaths')]
     public function testPathTraversalIsImpossible(string $path): void
     {
-        foreach ([
+        foreach (
+            [
             fn () => $this->disk->get($path),
             fn () => $this->disk->put($path, 'pwned'),
             fn () => $this->disk->delete($path),
             fn () => $this->disk->exists($path),
             fn () => $this->disk->deleteDirectory($path),
-        ] as $op) {
+            ] as $op
+        ) {
             try {
                 $op();
                 $this->fail("operation allowed on hostile path: {$path}");
@@ -183,11 +185,13 @@ final class StorageTest extends TestCase
 
     public function testSizeAndErrorLimits(): void
     {
-        foreach ([
+        foreach (
+            [
             fn () => Uploads::store($this->upload(self::PNG), $this->disk, 'u', Uploads::IMAGES, maxBytes: 10),
             fn () => Uploads::store($this->upload(''), $this->disk, 'u', Uploads::IMAGES),
             fn () => Uploads::store($this->upload(self::PNG, error: UPLOAD_ERR_INI_SIZE), $this->disk, 'u', Uploads::IMAGES),
-        ] as $attempt) {
+            ] as $attempt
+        ) {
             try {
                 $attempt();
                 $this->fail();

@@ -58,7 +58,9 @@ final class FactoryTest extends TestCase
     public function testAfterCreatingAndRaw(): void
     {
         $seen = [];
-        User::factory()->afterCreating(function ($u) use (&$seen) { $seen[] = $u->id; })->count(2)->create();
+        User::factory()->afterCreating(function ($u) use (&$seen) {
+            $seen[] = $u->id;
+        })->count(2)->create();
         $this->assertSame([1, 2], $seen);
         $before = User::count();
         $raw = Post::factory()->raw(['user_id' => 7]);

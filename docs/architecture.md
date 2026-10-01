@@ -13,16 +13,27 @@ public/index.php → bootstrap/app.php → Application::boot()  (env, config, pr
 
 ## PSR compliance
 
-| PSR | Status |
-|---|---|
-| PSR-1 / PSR-12 | code written to the standards (no automated linter is wired up yet) |
-| PSR-3 Logger | `Log\FileLogger` (extends `Psr\Log\AbstractLogger`) |
-| PSR-4 Autoloading | `Naluz\` → `src/`, `App\` → `app/` |
-| PSR-7 / PSR-17 HTTP messages & factories | via `nyholm/psr7`; `Naluz\Http\Response` extends its response |
-| PSR-11 Container | `Container\Container` with auto-wiring, singletons, aliases and method injection |
-| PSR-14 Events | `Events\Dispatcher` (dispatcher + listener provider, stoppable events) |
-| PSR-15 Middleware / handlers | pipeline, router is a `RequestHandlerInterface`, all built-in middleware are PSR-15 |
-| PSR-16 Simple cache | `Cache\FileCache`, `Cache\ArrayCache` |
+Verified, not just claimed: `tests/Unit/PsrComplianceTest.php` asserts the interface for each row, and
+`vendor/bin/phpcs` checks the coding standard (config in `phpcs.xml.dist`, runs in CI).
+
+| PSR | | Status |
+|---|---|---|
+| 1 Basic Coding Standard | style | **0 errors** under `phpcs` (PSR-1 is part of the PSR-12 ruleset). Test files may hold several small fixture classes |
+| 3 Logger | `Log\FileLogger` | implemented (extends `Psr\Log\AbstractLogger`); the container serves `LoggerInterface` |
+| 4 Autoloading | `composer.json` | `Naluz\` → `src/`, `App\` → `app/`, `Database\Factories\|Seeders\`; a test checks every class file matches its namespace |
+| 6 Caching Interface | `Cache\Psr6\CacheItemPool` | implemented as an adapter over any PSR-16 cache (file, array, Redis); container serves `CacheItemPoolInterface` |
+| 7 HTTP Message | via `nyholm/psr7` | requests and responses are PSR-7 objects; `Naluz\Http\Response` extends the nyholm response |
+| 11 Container | `Container\Container` | implemented, with auto-wiring, singletons, aliases, method injection |
+| 12 Extended Coding Style | style | **0 errors**; 299 *warnings* remain — all "line exceeds the 120-character soft limit" (PSR-12 makes 120 a soft limit) |
+| 13 Hypermedia Links | `Http\Link`, `Http\LinkProvider` | implemented (evolvable link + provider), RFC 8288 `Link:` header serialisation with injection checks, `Paginator::links()` |
+| 14 Event Dispatcher | `Events\Dispatcher` | dispatcher **and** listener provider, stoppable events |
+| 15 HTTP Handlers | `Routing\Router`, `Pipeline`, all middleware | the router is a `RequestHandlerInterface`; every built-in middleware is a PSR-15 `MiddlewareInterface` |
+| 16 Simple Cache | `Cache\FileCache`, `ArrayCache`, `Redis\RedisCache` | implemented |
+| 17 HTTP Factories | via `nyholm/psr7` | `Psr17Factory` is bound for request, response, stream, URI and uploaded-file creation |
+| 18 HTTP Client | `guzzlehttp/guzzle` | Guzzle is the bound `Psr\Http\Client\ClientInterface`; `Http` wrapper adds JSON, safe redirects and SSRF protection — see [http-client.md](http-client.md) |
+| 20 Clock | `Support\SystemClock`, `FrozenClock` | implemented; `now()` and the container use it |
+
+(PSR-2, PSR-5, PSR-8, PSR-9, PSR-10, PSR-19, PSR-21 are abandoned, drafts, or withdrawn, and are not applicable.)
 
 ## Components (`src/`)
 
@@ -41,7 +52,7 @@ much smaller, auditable codebase with stricter defaults. Honest comparison:
 
 | | NaluzPHP | Laravel |
 |---|---|---|
-| Size / dependencies | ~11k LOC, two runtime deps (`nyholm/psr7`, `-server`) + PSR interfaces; own Redis client, mailer, template engine | hundreds of packages |
+| Size / dependencies | ~12k LOC, three runtime packages (`nyholm/psr7`, `nyholm/psr7-server`, `guzzlehttp/guzzle`) + PSR interfaces; own Redis client, mailer, template engine | hundreds of packages |
 | HTTP layer | PSR-7/15 end to end (any PSR-15 middleware drops in) | Symfony HttpFoundation (PSR-7 via bridge) |
 | Query builder identifiers | validated; non-identifiers throw (user-controlled column names can't inject) | quoted but not validated — a known injection class |
 | Debug | off unless explicitly enabled | enabled in the skeleton's `.env.example` |

@@ -12,4 +12,6 @@ if (PHP_SAPI !== 'cli') {
 /** @var Naluz\Foundation\Application $app */
 $app = require __DIR__ . '/bootstrap/app.php';
 
+$app->registerErrorHandler();
+
 exit((new Kernel($app))->run($argv));

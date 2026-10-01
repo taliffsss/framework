@@ -578,8 +578,10 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
 
     public function __get(string $key): mixed
     {
-        if (array_key_exists($key, $this->attributes) || array_key_exists($key, $this->relations)
-            || method_exists($this, 'get' . Str::studly($key) . 'Attribute')) {
+        if (
+            array_key_exists($key, $this->attributes) || array_key_exists($key, $this->relations)
+            || method_exists($this, 'get' . Str::studly($key) . 'Attribute')
+        ) {
             return $this->getAttribute($key);
         }
         if (method_exists($this, $key) && !method_exists(self::class, $key)) {

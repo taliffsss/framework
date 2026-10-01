@@ -25,6 +25,11 @@ use Naluz\View\Factory;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\EventDispatcher\ListenerProviderInterface;
 use Psr\Log\LoggerInterface;
+use Psr\Cache\CacheItemPoolInterface;
+use Psr\Clock\ClockInterface;
+use Psr\Http\Client\ClientInterface as HttpClientInterface;
+use Psr\Http\Message\RequestFactoryInterface;
+use Psr\Http\Message\StreamFactoryInterface;
 use Psr\SimpleCache\CacheInterface;
 
 final class CoreServiceProvider extends ServiceProvider
@@ -47,6 +52,16 @@ final class CoreServiceProvider extends ServiceProvider
             'redis' => new RedisCache($c->make(RedisClient::class)),
             default => new FileCache($c->basePath('storage/cache/data')),
         });
+
+        // PSR-20 clock (timezone from app.timezone) and PSR-6 pool over the configured PSR-16 cache
+        $app->singleton(ClockInterface::class, fn ($c) => new \Naluz\Support\SystemClock(new \DateTimeZone((string) $c->make(Repository::class)->get('app.timezone', 'UTC'))));
+        $app->singleton(CacheItemPoolInterface::class, fn ($c) => new \Naluz\Cache\Psr6\CacheItemPool($c->make(CacheInterface::class), $c->make(ClockInterface::class)));
+
+        // PSR-18 HTTP client (Guzzle) + PSR-17 factories (nyholm) + convenience wrapper
+        $app->singleton(HttpClientInterface::class, fn ($c) => \Naluz\Http\Client\HttpClientFactory::make((array) $c->make(Repository::class)->get('http', [])));
+        $app->singleton(RequestFactoryInterface::class, fn () => new \Nyholm\Psr7\Factory\Psr17Factory());
+        $app->singleton(StreamFactoryInterface::class, fn () => new \Nyholm\Psr7\Factory\Psr17Factory());
+        $app->singleton(\Naluz\Http\Client\Http::class, fn ($c) => new \Naluz\Http\Client\Http($c->make(HttpClientInterface::class), $c->make(RequestFactoryInterface::class), $c->make(StreamFactoryInterface::class), (int) $c->make(Repository::class)->get('http.max_redirects', 3)));
 
         $app->singleton(Dispatcher::class, fn () => new Dispatcher());
         $app->alias(EventDispatcherInterface::class, Dispatcher::class);

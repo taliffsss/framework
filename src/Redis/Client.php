@@ -64,7 +64,7 @@ class Client
     public function command(string|int|float ...$args): mixed
     {
         $args = array_map('strval', $args);
-        for ($attempt = 0; ; $attempt++) {
+        for ($attempt = 0;; $attempt++) {
             try {
                 if (!is_resource($this->socket)) {
                     $this->connect();

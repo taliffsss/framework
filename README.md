@@ -15,12 +15,12 @@ public function index(): Paginator
 ```
 
 - **PHP 8.2+** (developed and tested on 8.3; CI matrix covers 8.2 – 8.5), `declare(strict_types=1)` everywhere
-- **PSR-native**: PSR-3, 4, 7, 11, 14, 15, 16, 17 (see [architecture](docs/architecture.md))
+- **PSR-native**: PSR-1, 3, 4, 6, 7, 11, 12, 13, 14, 15, 16, 17, 18 (Guzzle) and 20 — each one tested (see [architecture](docs/architecture.md))
 - **Secure by default**: parameterised SQL with identifier allow-listing, mass-assignment protection, CSRF, hardened
   headers, Argon2id, authenticated encryption, strict sessions, rate limiting, CORS allow-list
 - **Batteries included, still small**: ORM + query builder, compiled auto-escaping templates, queues, mail, scheduler,
-  file storage, Redis cache/session/queue, factories & seeders, route cache — ~11k lines, two runtime dependencies beyond
-  the PSR interfaces (`nyholm/psr7`, `nyholm/psr7-server`)
+  file storage, Redis cache/session/queue, factories & seeders, route cache — ~11k lines, three runtime packages beyond
+  the PSR interfaces (`nyholm/psr7`, `nyholm/psr7-server`, `guzzlehttp/guzzle`)
 
 ## Quick start
 
@@ -220,6 +220,7 @@ See [docs/testing.md](docs/testing.md).
 - [Routing, HTTP & views](docs/http.md)
 - [Database: query builder, ORM, migrations](docs/database.md)
 - [Templates](docs/templates.md) · [Queues](docs/queues.md) · [Mail](docs/mail.md) · [Scheduler](docs/scheduler.md) · [Storage & uploads](docs/storage.md)
+- [HTTP client (Guzzle, PSR-18)](docs/http-client.md) · [Logging & error handling](docs/logging.md)
 - [Performance](docs/performance.md) · [Building packages](docs/packages.md)
 - [Security](docs/security.md)
 - [Architecture, PSR compliance & how it compares to Laravel](docs/architecture.md)

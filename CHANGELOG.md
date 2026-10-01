@@ -23,3 +23,16 @@
 ## 1.0.0
 - Initial NaluzPHP release: container, router, PSR-15 pipeline, query builder, ORM, migrations, validation,
   sessions, auth (session + JWT), CSRF, security headers, CORS, rate limiting, CLI.
+
+## Unreleased (PSR coverage)
+
+### Added
+- PSR-6 (`Cache\Psr6\CacheItemPool` over any PSR-16 cache), PSR-13 (`Http\Link`, `LinkProvider`, `Paginator::links()`),
+  PSR-18 via Guzzle (`Http` wrapper with JSON helpers, bounded redirects that drop credentials cross-origin, SSRF guard),
+  PSR-20 (`SystemClock`, `FrozenClock`).
+- `ErrorHandler`: warnings → exceptions, deprecations logged, uncaught exceptions and fatals logged.
+- `phpcs.xml.dist` + CI step: PSR-12 enforced (0 errors).
+
+### Changed
+- `FileLogger` falls back to `error_log()` when the log file can't be written, instead of dropping the message.
+- Code reformatted to PSR-12.

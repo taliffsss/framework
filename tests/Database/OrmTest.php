@@ -285,10 +285,18 @@ final class OrmTest extends TestCase
     public function testModelEvents(): void
     {
         $log = [];
-        User::creating(function (User $u) use (&$log) { $log[] = 'creating'; });
-        User::created(function (User $u) use (&$log) { $log[] = 'created'; });
-        User::updating(function () use (&$log) { $log[] = 'updating'; });
-        User::deleted(function () use (&$log) { $log[] = 'deleted'; });
+        User::creating(function (User $u) use (&$log) {
+            $log[] = 'creating';
+        });
+        User::created(function (User $u) use (&$log) {
+            $log[] = 'created';
+        });
+        User::updating(function () use (&$log) {
+            $log[] = 'updating';
+        });
+        User::deleted(function () use (&$log) {
+            $log[] = 'deleted';
+        });
         $u = $this->user();
         $u->update(['name' => 'N']);
         $u->delete();

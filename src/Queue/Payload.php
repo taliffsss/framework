@@ -27,7 +27,7 @@ final class Payload
     {
         try {
             $envelope = $this->encrypter->decrypt($payload);
-        } catch (DecryptException|\JsonException $e) {
+        } catch (DecryptException | \JsonException $e) {
             throw new InvalidPayloadException('Queue payload is corrupt or was not created by this application.', 0, $e);
         }
         $class = $envelope['class'] ?? null;

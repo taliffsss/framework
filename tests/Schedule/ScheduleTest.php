@@ -96,10 +96,18 @@ final class ScheduleTest extends TestCase
     {
         $ran = [];
         $s = $this->schedule();
-        $s->call(function () use (&$ran) { $ran[] = 'every-minute'; }, 'a')->everyMinute();
-        $s->call(function () use (&$ran) { $ran[] = 'noon'; }, 'b')->dailyAt('12:00');
-        $s->call(function () { throw new \RuntimeException('boom'); }, 'c')->everyMinute();
-        $s->call(function () use (&$ran) { $ran[] = 'after-failure'; }, 'd')->everyMinute();
+        $s->call(function () use (&$ran) {
+            $ran[] = 'every-minute';
+        }, 'a')->everyMinute();
+        $s->call(function () use (&$ran) {
+            $ran[] = 'noon';
+        }, 'b')->dailyAt('12:00');
+        $s->call(function () {
+            throw new \RuntimeException('boom');
+        }, 'c')->everyMinute();
+        $s->call(function () use (&$ran) {
+            $ran[] = 'after-failure';
+        }, 'd')->everyMinute();
 
         $result = $s->run($this->at('2026-03-04 09:30'));
         $this->assertSame(['every-minute', 'after-failure'], $ran);
@@ -113,9 +121,15 @@ final class ScheduleTest extends TestCase
     {
         $n = 0;
         $s = $this->schedule();
-        $s->call(function () use (&$n) { $n++; })->everyMinute()->when(fn () => false);
-        $s->call(function () use (&$n) { $n += 10; })->everyMinute()->skip(fn () => true);
-        $s->call(function () use (&$n) { $n += 100; })->everyMinute()->when(fn () => true);
+        $s->call(function () use (&$n) {
+            $n++;
+        })->everyMinute()->when(fn () => false);
+        $s->call(function () use (&$n) {
+            $n += 10;
+        })->everyMinute()->skip(fn () => true);
+        $s->call(function () use (&$n) {
+            $n += 100;
+        })->everyMinute()->when(fn () => true);
         $s->run($this->at('2026-03-04 09:30'));
         $this->assertSame(100, $n);
     }
@@ -144,10 +158,15 @@ final class ScheduleTest extends TestCase
     public function testCommandsAndDependencyInjection(): void
     {
         $lines = [];
-        $s = $this->schedule(function (string $line) use (&$lines) { $lines[] = $line; return str_contains($line, 'fail') ? 2 : 0; });
+        $s = $this->schedule(function (string $line) use (&$lines) {
+            $lines[] = $line;
+            return str_contains($line, 'fail') ? 2 : 0;
+        });
         $s->command('queue:work --stop-when-empty')->everyMinute();
         $s->command('do:fail')->everyMinute();
-        $s->call(function (\stdClass $o) use (&$lines) { $lines[] = 'di:' . get_class($o); }, 'di')->everyMinute();
+        $s->call(function (\stdClass $o) use (&$lines) {
+            $lines[] = 'di:' . get_class($o);
+        }, 'di')->everyMinute();
         $r = $s->run($this->at('2026-03-04 09:30'));
         $this->assertSame(['queue:work --stop-when-empty', 'do:fail', 'di:stdClass'], $lines);
         $this->assertSame('failed', $r['do:fail']);
@@ -155,7 +174,9 @@ final class ScheduleTest extends TestCase
 
     public function testScheduleRunAndListCommands(): void
     {
-        $this->app->make(Schedule::class)->call(function () { $GLOBALS['__naluz_ran'] = true; }, 'cli-task')->everyMinute();
+        $this->app->make(Schedule::class)->call(function () {
+            $GLOBALS['__naluz_ran'] = true;
+        }, 'cli-task')->everyMinute();
         $stream = fopen('php://memory', 'w+');
         $kernel = new Kernel($this->app, new Output($stream));
         $this->assertSame(0, $kernel->run(['naluz', 'schedule:run']));
