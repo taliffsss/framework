@@ -5,7 +5,7 @@
 #### Added
 - Sample service providers (`app/Providers/AppServiceProvider`, `ObserverServiceProvider`) registered in `config/app.php`.
 - Model observers: `Model::observe()`, `#[ObservedBy]`, sample `UserObserver` / `PostObserver`, `make:observer`
-  (needs `naluz/framework` ^1.1).
+  (needs `naluz/framework` ^1.2).
 - Built-in GraphQL server (`Naluz\GraphQL`): sample schema `app/GraphQL/AppSchema`, `/api/graphql` endpoint, `config/graphql.php`,
   optional-auth middleware `jwt.optional`. See [docs/graphql.md](docs/graphql.md). See [docs/providers-and-observers.md](docs/providers-and-observers.md).
 
