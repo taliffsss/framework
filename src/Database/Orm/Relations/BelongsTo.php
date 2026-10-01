@@ -50,7 +50,9 @@ final class BelongsTo extends Relation
             $dict[$r->getAttribute($this->ownerKey)] = $r;
         }
         foreach ($models as $m) {
-            $m->setRelation($relation, $dict[$m->getAttribute($this->foreignKey)] ?? null);
+            $fk = $m->getAttribute($this->foreignKey);
+            // nullable foreign keys: never use null as an array key (deprecated in PHP 8.5)
+            $m->setRelation($relation, $fk === null ? null : ($dict[$fk] ?? null));
         }
         return $models;
     }

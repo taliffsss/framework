@@ -73,6 +73,17 @@ final class Comment extends Model
     }
 }
 
+final class Note extends Model
+{
+    protected bool $timestamps = false;
+    protected array $fillable = ['body', 'author_id'];
+
+    public function author(): \Naluz\Database\Orm\Relations\BelongsTo
+    {
+        return $this->belongsTo(Author::class);
+    }
+}
+
 final class Image extends Model
 {
     protected bool $timestamps = false;
@@ -109,7 +120,22 @@ final class RelationsTest extends TestCase
             $t->string('imageable_type');
             $t->integer('imageable_id');
         });
+        $s->create('notes', function ($t) {
+            $t->id();
+            $t->string('body');
+            $t->integer('author_id')->nullable();
+        });
         Model::morphMap([], false);
+    }
+
+    public function testBelongsToWithNullableForeignKeyEagerLoads(): void
+    {
+        $a = Author::create(['name' => 'A', 'country_id' => 1]);
+        Note::create(['body' => 'owned', 'author_id' => $a->id]);
+        Note::create(['body' => 'orphan', 'author_id' => null]);
+        $notes = Note::with('author')->orderBy('id')->get();
+        $this->assertSame('A', $notes[0]->author->name);
+        $this->assertNull($notes[1]->author);
     }
 
     protected function tearDown(): void
