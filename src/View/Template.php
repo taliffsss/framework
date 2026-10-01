@@ -13,6 +13,9 @@ final class Template
     private array $sections = [];
     /** @var list<string> */
     private array $stack = [];
+    /** @var array<string,list<string>> */
+    private array $pushes = [];
+    private array $data = [];
 
     public function __construct(private readonly Factory $factory, private readonly string $file)
     {
@@ -23,10 +26,12 @@ final class Template
         if (!is_file($this->file)) {
             throw new \InvalidArgumentException('View not found: ' . basename($this->file));
         }
-        $content = $this->capture($this->file, $data);
+        $this->data = $data;
+        $content = $this->capture($this->factory->compiled($this->file), $data);
         if ($this->layout !== null) {
             $layout = new self($this->factory, $this->factory->file($this->layout));
             $layout->sections = $this->sections + ['content' => $content];
+            $layout->pushes = $this->pushes;
             return $layout->render($this->layoutData + $data);
         }
         return $content;
@@ -56,10 +61,32 @@ final class Template
         $this->layoutData = $data;
     }
 
-    public function section(string $name): void
+    /** `section('a')` opens a buffered section; `section('a', 'text')` sets an (escaped) inline value. */
+    public function section(string $name, ?string $content = null): void
     {
+        if ($content !== null) {
+            $this->sections[$name] = e($content);
+            return;
+        }
         $this->stack[] = $name;
         ob_start();
+    }
+
+    public function push(string $stack): void
+    {
+        $this->stack[] = "\0push:" . $stack;
+        ob_start();
+    }
+
+    public function endPush(): void
+    {
+        $name = array_pop($this->stack) ?? throw new \LogicException('endPush() without push().');
+        $this->pushes[substr($name, 6)][] = (string) ob_get_clean();
+    }
+
+    public function stack(string $name): string
+    {
+        return implode('', $this->pushes[$name] ?? []);
     }
 
     public function endSection(): void
@@ -76,6 +103,6 @@ final class Template
 
     public function include(string $name, array $data = []): string
     {
-        return $this->factory->render($name, $data);
+        return $this->factory->render($name, $data + $this->data);
     }
 }

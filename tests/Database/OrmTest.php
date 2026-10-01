@@ -170,6 +170,7 @@ final class OrmTest extends TestCase
             }
         }
 
+        Model::preventLazyLoading(false); // demonstrate the problem the guard exists to catch
         $lazy = $this->queries(function () {
             foreach (User::all() as $u) {
                 $u->posts;
@@ -181,6 +182,7 @@ final class OrmTest extends TestCase
                 $this->assertCount(3, $u->posts);
             }
         });
+        Model::preventLazyLoading(true);
         $this->assertCount(4, $lazy, '1 + N queries when lazy');
         $this->assertCount(2, $eager, 'exactly 2 queries when eager loaded');
 
@@ -226,7 +228,7 @@ final class OrmTest extends TestCase
         $result = $post->tags()->sync([$orm->id, $db]);
         $this->assertSame([$db->id], $result['attached']);
         $this->assertSame([$php->id], $result['detached']);
-        $this->assertEqualsCanonicalizing(['orm', 'db'], TaggedPost::find($p1->id)->tags->pluck('name')->all());
+        $this->assertEqualsCanonicalizing(['orm', 'db'], TaggedPost::with('tags')->find($p1->id)->tags->pluck('name')->all());
 
         TaggedPost::find($p2->id)->tags()->attach($orm);
         $all = TaggedPost::with('tags')->orderBy('id')->get();

@@ -9,6 +9,8 @@ return [
     'env' => env('APP_ENV', 'production'),
     // Secure by default: debug output must be switched on explicitly.
     'debug' => (bool) env('APP_DEBUG', false),
+    // Throw on accidental lazy loading (N+1). Defaults to on for APP_ENV=local|testing or when debugging.
+    'prevent_lazy_loading' => env('PREVENT_LAZY_LOADING'),
     'url' => env('APP_URL', 'http://localhost'),
     'timezone' => env('APP_TIMEZONE', 'UTC'),
     'key' => env('APP_KEY', ''),

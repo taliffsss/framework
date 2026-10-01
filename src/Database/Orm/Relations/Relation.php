@@ -50,6 +50,12 @@ abstract class Relation
         return $this->query;
     }
 
+    /** Run the (eager) query. Relations needing something smarter, like MorphTo, override this. */
+    public function getEager(): Collection
+    {
+        return $this->query->get();
+    }
+
     public function get(): Collection
     {
         return $this->query->get();

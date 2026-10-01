@@ -1,11 +1,21 @@
 {
     "name": "naluz/naluzphp",
-    "description": "NaluzPHP — a modern, secure PHP framework for monolithic apps and REST APIs, with a built-in ORM and query builder.",
+    "description": "NaluzPHP \u2014 a modern, secure PHP framework for monolithic apps and REST APIs, with a built-in ORM and query builder.",
     "type": "project",
     "license": "MIT",
-    "keywords": ["framework", "php", "orm", "query-builder", "rest-api", "psr"],
+    "keywords": [
+        "framework",
+        "php",
+        "orm",
+        "query-builder",
+        "rest-api",
+        "psr"
+    ],
     "authors": [
-        {"name": "Mark Anthony Naluz", "email": "anthony.naluz15@gmail.com"}
+        {
+            "name": "Mark Anthony Naluz",
+            "email": "anthony.naluz15@gmail.com"
+        }
     ],
     "require": {
         "php": "^8.2",
@@ -30,16 +40,22 @@
     "autoload": {
         "psr-4": {
             "Naluz\\": "src/",
-            "App\\": "app/"
+            "App\\": "app/",
+            "Database\\Factories\\": "database/factories/",
+            "Database\\Seeders\\": "database/seeders/"
         },
-        "files": ["src/Support/helpers.php"]
+        "files": [
+            "src/Support/helpers.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
             "Naluz\\Tests\\": "tests/"
         }
     },
-    "bin": ["naluz"],
+    "bin": [
+        "naluz"
+    ],
     "scripts": {
         "test": "phpunit",
         "serve": "@php naluz serve",

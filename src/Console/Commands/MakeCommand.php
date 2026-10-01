@@ -20,7 +20,7 @@ final class MakeCommand extends Command
 
     public static function instances(Application $app): array
     {
-        return array_map(fn ($k) => new self($app, $k), ['controller', 'model', 'middleware', 'migration']);
+        return array_map(fn ($k) => new self($app, $k), ['controller', 'model', 'middleware', 'migration', 'factory', 'seeder', 'job', 'provider']);
     }
 
     public function name(): string
@@ -59,11 +59,20 @@ final class MakeCommand extends Command
     /** @return array{0:string,1:string} */
     private function classFile(string $name): array
     {
-        $dir = ['controller' => 'Http/Controllers', 'model' => 'Models', 'middleware' => 'Http/Middleware'][$this->kind];
-        $parts = explode('/', $name);
-        $class = Str::studly(array_pop($parts));
-        $ns = implode('\\', ['App', ...explode('/', $dir), ...array_map([Str::class, 'studly'], $parts)]);
-        $path = 'app/' . $dir . '/' . implode('/', array_map([Str::class, 'studly'], $parts)) . ($parts ? '/' : '') . $class . '.php';
+        // kind => [base namespace, directory]
+        [$root, $dir] = [
+            'controller' => ['App\\Http\\Controllers', 'app/Http/Controllers'],
+            'model' => ['App\\Models', 'app/Models'],
+            'middleware' => ['App\\Http\\Middleware', 'app/Http/Middleware'],
+            'job' => ['App\\Jobs', 'app/Jobs'],
+            'provider' => ['App\\Providers', 'app/Providers'],
+            'factory' => ['Database\\Factories', 'database/factories'],
+            'seeder' => ['Database\\Seeders', 'database/seeders'],
+        ][$this->kind];
+        $parts = array_map([Str::class, 'studly'], explode('/', $name));
+        $class = array_pop($parts);
+        $ns = implode('\\', [$root, ...$parts]);
+        $path = $dir . '/' . implode('/', $parts) . ($parts ? '/' : '') . $class . '.php';
 
         $body = match ($this->kind) {
             'controller' => <<<PHP
@@ -80,6 +89,55 @@ class {$class} extends \\Naluz\\Database\\Orm\\Model
 {
     /** Attributes that may be mass-assigned. Mass assignment is disabled until you list them. */
     protected array \$fillable = [];
+}
+PHP,
+            'factory' => <<<PHP
+final class {$class} extends \\Naluz\\Database\\Factory
+{
+    protected string \$model = \\App\\Models\\Model::class; // TODO: point at your model
+
+    public function definition(): array
+    {
+        return [
+            'name' => \$this->fake()->name(),
+        ];
+    }
+}
+PHP,
+            'seeder' => <<<PHP
+final class {$class} extends \\Naluz\\Database\\Seeder
+{
+    public function run(): void
+    {
+        //
+    }
+}
+PHP,
+            'job' => <<<PHP
+final class {$class} extends \\Naluz\\Queue\\Job
+{
+    public function __construct(public readonly int \$id = 0)
+    {
+    }
+
+    public function handle(): void
+    {
+        //
+    }
+}
+PHP,
+            'provider' => <<<PHP
+final class {$class} extends \\Naluz\\Foundation\\ServiceProvider
+{
+    public function register(): void
+    {
+        //
+    }
+
+    public function boot(): void
+    {
+        //
+    }
 }
 PHP,
             'middleware' => <<<PHP

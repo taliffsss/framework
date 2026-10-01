@@ -11,6 +11,8 @@ final class Env
 {
     /** @var array<string,string> */
     private static array $values = [];
+    /** @var array<string,string> */
+    private static array $explicit = [];
 
     public static function load(string $path): void
     {
@@ -51,12 +53,13 @@ final class Env
 
     public static function set(string $key, string $value): void
     {
-        self::$values[$key] = $value;
+        self::$explicit[$key] = $value;
     }
 
     public static function get(string $key, mixed $default = null): mixed
     {
-        $value = self::$values[$key] ?? $_ENV[$key] ?? (getenv($key) !== false ? getenv($key) : null);
+        // precedence: Env::set() > real environment (CI, php-fpm, docker) > .env file
+        $value = self::$explicit[$key] ?? $_ENV[$key] ?? (getenv($key) !== false ? getenv($key) : null) ?? self::$values[$key] ?? null;
         if ($value === null) {
             return $default instanceof \Closure ? $default() : $default;
         }
@@ -72,5 +75,6 @@ final class Env
     public static function flush(): void
     {
         self::$values = [];
+        self::$explicit = [];
     }
 }

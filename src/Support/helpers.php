@@ -115,3 +115,23 @@ if (!function_exists('now')) {
         return new DateTimeImmutable('now', new DateTimeZone(config('app.timezone', 'UTC')));
     }
 }
+
+if (!function_exists('method_field')) {
+    /** Hidden input for HTML form method spoofing (PUT, PATCH, DELETE only). */
+    function method_field(string $method): string
+    {
+        $method = strtoupper($method);
+        if (!in_array($method, ['PUT', 'PATCH', 'DELETE'], true)) {
+            throw new InvalidArgumentException("Cannot spoof method [{$method}].");
+        }
+        return '<input type="hidden" name="_method" value="' . e($method) . '">';
+    }
+}
+
+if (!function_exists('json_for_html')) {
+    /** JSON that is safe inside HTML text, attributes and <script> blocks. */
+    function json_for_html(mixed $value): string
+    {
+        return json_encode($value, JSON_THROW_ON_ERROR | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+    }
+}

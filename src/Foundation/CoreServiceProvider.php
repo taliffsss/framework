@@ -72,6 +72,6 @@ final class CoreServiceProvider extends ServiceProvider
             return new Store($handler);
         });
 
-        $app->singleton(Factory::class, fn ($c) => new Factory($c->basePath('resources/views')));
+        $app->singleton(Factory::class, fn ($c) => new Factory($c->basePath('resources/views'), $c->basePath('storage/cache/views'), $c->make(Repository::class)->get('app.env') !== 'production'));
     }
 }

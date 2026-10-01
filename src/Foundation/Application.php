@@ -67,6 +67,8 @@ final class Application extends Container
             $this->providers[] = $provider;
         }
         Model::setContainer($this);
+        Model::preventLazyLoading((bool) ($config->get('app.prevent_lazy_loading')
+            ?? ((bool) $config->get('app.debug', false) || in_array($config->get('app.env'), ['local', 'testing'], true))));
         foreach ($this->providers as $provider) {
             $provider->boot();
         }

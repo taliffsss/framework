@@ -64,6 +64,35 @@ final class Schema
         $this->db->statement('DROP TABLE IF EXISTS ' . $this->db->grammar()->wrap($table));
     }
 
+    /** Drop every table in the current database (used by `migrate:fresh`). */
+    public function dropAllTables(): void
+    {
+        $g = $this->db->grammar();
+        switch ($this->db->driver()) {
+            case 'sqlite':
+                $tables = array_column($this->db->select("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'"), 'name');
+                $this->db->statement('PRAGMA foreign_keys = OFF');
+                foreach ($tables as $t) {
+                    $this->db->statement('DROP TABLE IF EXISTS ' . $g->wrap($t));
+                }
+                $this->db->statement('PRAGMA foreign_keys = ON');
+                break;
+            case 'pgsql':
+                $tables = array_column($this->db->select('SELECT table_name AS name FROM information_schema.tables WHERE table_schema = current_schema() AND table_type = ?', ['BASE TABLE']), 'name');
+                foreach ($tables as $t) {
+                    $this->db->statement('DROP TABLE IF EXISTS ' . $g->wrap($t) . ' CASCADE');
+                }
+                break;
+            default:
+                $tables = array_column($this->db->select('SELECT table_name AS name FROM information_schema.tables WHERE table_schema = database() AND table_type = ?', ['BASE TABLE']), 'name');
+                $this->db->statement('SET FOREIGN_KEY_CHECKS = 0');
+                foreach ($tables as $t) {
+                    $this->db->statement('DROP TABLE IF EXISTS ' . $g->wrap($t));
+                }
+                $this->db->statement('SET FOREIGN_KEY_CHECKS = 1');
+        }
+    }
+
     public function hasTable(string $table): bool
     {
         return match ($this->db->driver()) {

@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Naluz\Database\Orm\HasFactory;
 use Naluz\Database\Orm\Model;
 use Naluz\Database\Orm\SoftDeletes;
 
 class Post extends Model
 {
+    use HasFactory;
     use SoftDeletes;
 
     protected array $fillable = ['user_id', 'title', 'body', 'published'];

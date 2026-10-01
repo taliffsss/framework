@@ -9,7 +9,12 @@ use Naluz\Database\DatabaseManager;
 use Naluz\Database\Orm\Relations\BelongsTo;
 use Naluz\Database\Orm\Relations\BelongsToMany;
 use Naluz\Database\Orm\Relations\HasMany;
+use Naluz\Database\Orm\Relations\HasManyThrough;
 use Naluz\Database\Orm\Relations\HasOne;
+use Naluz\Database\Orm\Relations\HasOneThrough;
+use Naluz\Database\Orm\Relations\MorphMany;
+use Naluz\Database\Orm\Relations\MorphOne;
+use Naluz\Database\Orm\Relations\MorphTo;
 use Naluz\Database\Orm\Relations\Relation;
 use Naluz\Security\Encrypter;
 use Naluz\Security\Hasher;
@@ -54,6 +59,12 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
     private array $original = [];
     private array $relations = [];
     public bool $exists = false;
+    public bool $wasRecentlyCreated = false;
+    private ?string $morphTypeOverride = null;
+
+    private static bool $preventLazyLoading = false;
+    /** @var array<string,class-string<Model>> */
+    private static array $morphMap = [];
 
     private static ?ContainerInterface $container = null;
     /** @var array<class-string,array<string,list<\Closure>>> */
@@ -68,6 +79,54 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
     public static function setContainer(?ContainerInterface $container): void
     {
         self::$container = $container;
+    }
+
+    /**
+     * When on, touching a relationship that was not eager loaded throws instead of silently running a query per row.
+     * Enabled automatically in debug / testing (`app.prevent_lazy_loading`). Records created in this request are exempt.
+     */
+    public static function preventLazyLoading(bool $value = true): void
+    {
+        self::$preventLazyLoading = $value;
+    }
+
+    /**
+     * Name polymorphic types with short aliases instead of class names: `['post' => Post::class]`.
+     * Strongly recommended: class names in the database are a refactoring hazard and leak your structure.
+     *
+     * @param array<string,class-string<Model>> $map
+     */
+    public static function morphMap(array $map, bool $merge = true): void
+    {
+        self::$morphMap = $merge ? $map + self::$morphMap : $map;
+    }
+
+    /** @return class-string<Model> */
+    public static function resolveMorphClass(string $type): string
+    {
+        $class = self::$morphMap[$type] ?? (self::$morphMap === [] ? $type : null);
+        if ($class === null || !is_subclass_of($class, self::class)) {
+            throw new \InvalidArgumentException('Unknown or invalid polymorphic type.');
+        }
+        return $class;
+    }
+
+    public function getMorphClass(): string
+    {
+        $alias = array_search(static::class, self::$morphMap, true);
+        return $alias === false ? static::class : (string) $alias;
+    }
+
+    /** @internal */
+    public function morphTypeKey(): string
+    {
+        return $this->morphTypeOverride ?? $this->getMorphClass();
+    }
+
+    /** @internal remember which `_type` value located this model (for MorphTo matching) */
+    public function setRawMorphType(string $type): void
+    {
+        $this->morphTypeOverride = $type;
     }
 
     /** Forget every registered model event listener (useful in tests). */
@@ -354,6 +413,7 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
                 $query->insert($this->attributes);
             }
             $this->exists = true;
+            $this->wasRecentlyCreated = true;
             $this->fire('created');
         }
         $this->syncOriginal();
@@ -443,6 +503,50 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
         );
     }
 
+    public function morphOne(string $related, string $name, ?string $type = null, ?string $id = null, ?string $localKey = null): MorphOne
+    {
+        return new MorphOne((new $related())->newQuery(), $this, $type ?? $name . '_type', $id ?? $name . '_id', $localKey ?? $this->primaryKey);
+    }
+
+    public function morphMany(string $related, string $name, ?string $type = null, ?string $id = null, ?string $localKey = null): MorphMany
+    {
+        return new MorphMany((new $related())->newQuery(), $this, $type ?? $name . '_type', $id ?? $name . '_id', $localKey ?? $this->primaryKey);
+    }
+
+    /** `$comment->commentable` — the owner may be any model type. */
+    public function morphTo(string $name, ?string $type = null, ?string $id = null): MorphTo
+    {
+        return new MorphTo($this->newQuery(), $this, $type ?? $name . '_type', $id ?? $name . '_id');
+    }
+
+    public function hasManyThrough(string $related, string $through, ?string $firstKey = null, ?string $secondKey = null, ?string $localKey = null, ?string $secondLocalKey = null): HasManyThrough
+    {
+        $throughModel = new $through();
+        return new HasManyThrough(
+            (new $related())->newQuery(),
+            $this,
+            $throughModel,
+            $firstKey ?? $this->foreignKeyName(),
+            $secondKey ?? $throughModel->foreignKeyName(),
+            $localKey ?? $this->primaryKey,
+            $secondLocalKey ?? $throughModel->primaryKey
+        );
+    }
+
+    public function hasOneThrough(string $related, string $through, ?string $firstKey = null, ?string $secondKey = null, ?string $localKey = null, ?string $secondLocalKey = null): HasOneThrough
+    {
+        $throughModel = new $through();
+        return new HasOneThrough(
+            (new $related())->newQuery(),
+            $this,
+            $throughModel,
+            $firstKey ?? $this->foreignKeyName(),
+            $secondKey ?? $throughModel->foreignKeyName(),
+            $localKey ?? $this->primaryKey,
+            $secondLocalKey ?? $throughModel->primaryKey
+        );
+    }
+
     protected function foreignKeyName(): string
     {
         return Str::snake(Str::classBasename(static::class)) . '_' . $this->primaryKey;
@@ -481,6 +585,9 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
         if (method_exists($this, $key) && !method_exists(self::class, $key)) {
             $relation = $this->{$key}();
             if ($relation instanceof Relation) {
+                if (self::$preventLazyLoading && $this->exists && !$this->wasRecentlyCreated) {
+                    throw new LazyLoadingViolationException(static::class, $key);
+                }
                 return $this->relations[$key] = $relation->getResults();
             }
         }

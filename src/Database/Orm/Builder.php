@@ -230,7 +230,7 @@ class Builder
             if ($spec['nested'] !== []) {
                 $relation->getQuery()->with($spec['nested']);
             }
-            $models = $relation->match($relation->initRelation($models, $name), $relation->getQuery()->get(), $name);
+            $models = $relation->match($relation->initRelation($models, $name), $relation->getEager(), $name);
         }
         return $models;
     }
