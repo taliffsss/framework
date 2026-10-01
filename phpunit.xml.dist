@@ -17,6 +17,7 @@
         <testsuite name="Storage"><directory>tests/Storage</directory></testsuite>
         <testsuite name="Schedule"><directory>tests/Schedule</directory></testsuite>
         <testsuite name="NoSql"><directory>tests/NoSql</directory></testsuite>
+        <testsuite name="GraphQL"><directory>tests/GraphQL</directory></testsuite>
         <testsuite name="Console"><directory>tests/Console</directory></testsuite>
     </testsuites>
     <php>
