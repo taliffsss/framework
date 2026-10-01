@@ -89,7 +89,9 @@
     "prefer-stable": true,
     "suggest": {
         "ext-redis": "Not required: NaluzPHP ships its own Redis client.",
-        "ext-pcntl": "Lets queue:work shut down gracefully on SIGTERM/SIGINT."
+        "ext-pcntl": "Lets queue:work shut down gracefully on SIGTERM/SIGINT.",
+        "mongodb/mongodb": "MongoDB driver for NoSQL (needs ext-mongodb); the file and memory NoSQL drivers need nothing.",
+        "ext-pdo_sqlsrv": "Microsoft SQL Server (with the Microsoft ODBC driver)."
     },
     "extra": {
         "naluz": {

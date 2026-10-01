@@ -197,10 +197,17 @@ Post::published()->latest()->paginate(10);
 
 ## Database support
 
-`sqlite`, `mysql` (MariaDB), `pgsql`. SQL differences (quoting, upsert syntax, `LIMIT`/`OFFSET`, `RETURNING`,
+`sqlite`, `mysql` (MariaDB), `pgsql`, `sqlsrv` (SQL Server; needs `pdo_sqlsrv`). SQL differences (quoting, upsert syntax, `LIMIT`/`OFFSET`, `RETURNING`,
 auto-increment types) are handled in `Query\Grammar` and `Schema\Schema`. The automated suite runs on SQLite; the
-MySQL and PostgreSQL grammars are exercised only by SQL-generation unit tests — run the suite against your own server
+MySQL, PostgreSQL and SQL Server grammars are exercised only by SQL-generation unit tests — run the suite against your own server
 before relying on them in production (see [testing](testing.md)).
+
+### Read/write connections
+
+Set `DB_WRITE_HOST` and a comma-separated `DB_READ_HOST` (see `.env.example`). Reads use replicas, writes the primary, on
+separate PDO sessions. Reads inside transactions, after a write in the same request (`DB_STICKY`), `FOR UPDATE` and
+`RETURNING` queries use the primary; `->useWritePdo()` forces it. If all replicas fail, `DB_READ_FALLBACK` falls back to
+the primary. Document stores: [nosql.md](nosql.md).
 
 ## Factories & seeders
 

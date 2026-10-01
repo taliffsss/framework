@@ -170,3 +170,11 @@ if (!function_exists('http')) {
         return app(\Naluz\Http\Client\Http::class);
     }
 }
+
+if (!function_exists('nosql')) {
+    /** NoSQL document store: `nosql()->collection('users')->query()->where('age', '>', 18)->get()`. */
+    function nosql(?string $connection = null): \Naluz\NoSql\DocumentStore
+    {
+        return app(\Naluz\NoSql\NoSqlManager::class)->connection($connection);
+    }
+}

@@ -168,6 +168,8 @@ Every model query is cached for **5 minutes** and, when data is created, updated
 invalidated and **re-cached** automatically (including query-builder writes, pivots, soft deletes, cascades, transactions).
 Falls back to the database if the cache store is down. Per-model opt-out with `protected bool $cache = false;`. See [docs/model-cache.md](docs/model-cache.md).
 
+**Databases:** SQLite, MySQL, PostgreSQL, SQL Server, read/write replica splitting, and NoSQL document stores (file, memory, MongoDB) — see [docs/database.md](docs/database.md) and [docs/nosql.md](docs/nosql.md).
+
 ### Factories & seeders
 
 ```php

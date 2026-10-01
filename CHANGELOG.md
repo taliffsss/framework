@@ -3,6 +3,11 @@
 ## Unreleased
 
 ### Added
+- SQL Server (`sqlsrv`) support: dialect, schema builder, MERGE upserts, parameter/row chunking.
+- Read/write connections: separate sessions, replica pools (`DB_READ_HOST` list), sticky reads, failover, read-only
+  replicas, `useWritePdo()`.
+- NoSQL document stores (`file`, `memory`, `mongodb`) with an injection-safe query builder (`docs/nosql.md`).
+- `php naluz run:server [--port=8001] [--host] [--workers]` replaces `serve`.
 - Compiled, auto-escaping template engine (`*.naluz.php`): `{{ }}` escapes, `{!! !!}` is raw; layouts, sections, stacks,
   includes, loops, `@csrf`, `@method`, `@json`, `@auth`/`@guest`.
 - Queues: sync, database and Redis drivers; encrypted JSON payloads, retries with backoff, failed-job table,
