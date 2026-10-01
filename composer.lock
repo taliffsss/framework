@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "af6f94d582cf8821ae26e3e844698234",
+    "content-hash": "c9442bbc6ca7f4545152533d6e74d7ce",
     "packages": [
         {
             "name": "guzzlehttp/guzzle",
@@ -339,11 +339,11 @@
         },
         {
             "name": "naluz/framework",
-            "version": "dev-claude/determined-knuth-dctj79",
+            "version": "1.0.0",
             "dist": {
                 "type": "path",
                 "url": "packages/framework",
-                "reference": "432aceaaff0926be247d6c39358fe8bfceb3ead6"
+                "reference": "9a9059ef27e5d949f8ff39f8f55048ccde2f9ac6"
             },
             "require": {
                 "ext-fileinfo": "*",
@@ -3231,9 +3231,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "naluz/framework": 20
-    },
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

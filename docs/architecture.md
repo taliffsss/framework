@@ -102,5 +102,5 @@ git subtree split --prefix=packages/framework -b framework-split
 git push git@github.com:<you>/naluz-framework.git framework-split:main   # then tag a release, e.g. v1.0.0
 ```
 
-Submit that repository to Packagist, then in the application's `composer.json` drop the `repositories` entry and require
+Remove the temporary `"version"` line from the package's `composer.json` (tags define versions). Submit that repository to Packagist, then in the application's `composer.json` drop the `repositories` entry and require
 `"naluz/framework": "^1.0"` (or keep a `vcs` repository entry pointing at the repo).
