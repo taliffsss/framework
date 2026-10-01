@@ -17,7 +17,7 @@ final class Kernel
     {
         foreach (
             [
-            Commands\ServeCommand::class, Commands\KeyGenerateCommand::class, Commands\MigrateCommand::class,
+            Commands\RunServerCommand::class, Commands\KeyGenerateCommand::class, Commands\MigrateCommand::class,
             Commands\MigrateRollbackCommand::class, Commands\MigrateStatusCommand::class, Commands\RouteListCommand::class,
             Commands\MakeCommand::class, Commands\DbCommands::class, Commands\RouteCacheCommand::class, Commands\QueueCommands::class, Commands\ScheduleCommands::class, Commands\NewCommand::class, Commands\ModelCacheCommands::class,
             ] as $class

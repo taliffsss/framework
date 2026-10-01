@@ -6,7 +6,7 @@
 
 ```bash
 php naluz new my-app            # copies the starter, writes .env with fresh APP_KEY/JWT_SECRET, runs composer install
-cd my-app && php naluz migrate && php naluz serve
+cd my-app && php naluz migrate && php naluz run:server
 ```
 
 Options: `--name=vendor/package` (sets composer name), `--no-install`, `--dir=/parent/dir`. Or manually:
@@ -18,7 +18,7 @@ cp .env.example .env
 php naluz key:generate --jwt
 touch storage/database.sqlite     # or configure MySQL / PostgreSQL, see below
 php naluz migrate
-php naluz serve
+php naluz run:server
 ```
 
 Open <http://127.0.0.1:8000> and `GET /api/ping`.
@@ -61,7 +61,7 @@ Point the document root at `public/`.
   location / { try_files $uri /index.php$is_args$args; }
   location ~ \.php$ { include fastcgi_params; fastcgi_param SCRIPT_FILENAME $document_root/index.php; fastcgi_pass unix:/run/php/php-fpm.sock; }
   ```
-- **Dev**: `php naluz serve`.
+- **Dev**: `php naluz run:server`.
 
 Production checklist: `APP_DEBUG=false`, HTTPS (HSTS and `Secure` cookies then switch on automatically),
 `composer install --no-dev -o`, `storage/` writable but not web-accessible, strong `APP_KEY` / `JWT_SECRET`.

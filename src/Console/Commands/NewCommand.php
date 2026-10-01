@@ -87,7 +87,7 @@ final class NewCommand extends Command
             }
         }
 
-        $output->info("Project created. Next steps:\n  cd {$name}\n  " . ($input->option('no-install') ? "composer install\n  " : '') . "php naluz migrate\n  php naluz serve");
+        $output->info("Project created. Next steps:\n  cd {$name}\n  " . ($input->option('no-install') ? "composer install\n  " : '') . "php naluz migrate\n  php naluz run:server");
         return 0;
     }
 

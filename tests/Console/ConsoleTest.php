@@ -42,7 +42,7 @@ final class ConsoleTest extends TestCase
     {
         [$code, $out] = $this->cli(['list']);
         $this->assertSame(0, $code);
-        foreach (['migrate', 'serve', 'route:list', 'make:model', 'key:generate'] as $name) {
+        foreach (['migrate', 'run:server', 'route:list', 'make:model', 'key:generate'] as $name) {
             $this->assertStringContainsString($name, $out);
         }
         $this->assertStringContainsString('NaluzPHP', $out);

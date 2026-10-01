@@ -29,7 +29,7 @@ git clone https://github.com/taliffsss/framework.git naluzphp && cd naluzphp
 composer install
 php naluz new my-app                              # scaffolds a fresh project: .env, APP_KEY, JWT_SECRET, composer install
 cd ../my-app
-php naluz migrate && php naluz serve              # http://127.0.0.1:8000
+php naluz migrate && php naluz run:server              # http://127.0.0.1:8000
 
 # …or work directly in the clone:  cp .env.example .env && php naluz key:generate --jwt && touch storage/database.sqlite
 ```
@@ -180,7 +180,7 @@ php naluz migrate:fresh --seed
 | Command | |
 |---|---|
 | `new <name>` | scaffold a new project (`--name=vendor/pkg --no-install --dir=…`) |
-| `serve [--host --port]` | development server |
+| `run:server [--port=8001 --host --workers=N]` | development server (default http://127.0.0.1:8000) |
 | `key:generate [--jwt] [--show]` | create `APP_KEY` / `JWT_SECRET` |
 | `migrate` · `migrate:rollback [--step=N]` · `migrate:status` · `migrate:fresh [--seed]` · `db:seed` | database |
 | `make:controller / model / middleware / migration / factory / seeder / job / provider Name` | generators |
