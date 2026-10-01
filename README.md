@@ -15,7 +15,7 @@ public function index(): Paginator
 ```
 
 - **PHP 8.2+** (developed and tested on 8.3; CI matrix covers 8.2 – 8.5), `declare(strict_types=1)` everywhere
-- **PSR-native**: PSR-1, 3, 4, 6, 7, 11, 12, 13, 14, 15, 16, 17, 18 (Guzzle) and 20 — each one tested (see [architecture](docs/architecture.md))
+- **PSR-native**: PSR-1, 3, 4, 6, 7, 11, 12, 13, 14, 15, 16, 17, 18 (Guzzle) and 20 — each one tested (see [architecture](https://taliffsss.github.io/naluz-framework-docs/reference/architecture/))
 - **Secure by default**: parameterised SQL with identifier allow-listing, mass-assignment protection, CSRF, hardened
   headers, Argon2id, authenticated encryption, strict sessions, rate limiting, CORS allow-list
 - **Batteries included, still small**: ORM + query builder, compiled auto-escaping templates, queues, mail, scheduler,
@@ -146,7 +146,7 @@ middleware `jwt`) for APIs.
 @endsection
 ```
 
-Compiled to plain PHP and cached. See [docs/templates.md](docs/templates.md).
+Compiled to plain PHP and cached. See [docs/templates.md](https://taliffsss.github.io/naluz-framework-docs/basics/views/).
 
 ### Queues, mail, scheduler, storage
 
@@ -166,9 +166,9 @@ MODEL_CACHE_DRIVER=redis      # or local
 
 Every model query is cached for **5 minutes** and, when data is created, updated or deleted, the affected entries are
 invalidated and **re-cached** automatically (including query-builder writes, pivots, soft deletes, cascades, transactions).
-Falls back to the database if the cache store is down. Per-model opt-out with `protected bool $cache = false;`. See [docs/model-cache.md](docs/model-cache.md).
+Falls back to the database if the cache store is down. Per-model opt-out with `protected bool $cache = false;`. See [docs/model-cache.md](https://taliffsss.github.io/naluz-framework-docs/database/model-caching/).
 
-**Databases:** SQLite, MySQL, PostgreSQL, SQL Server, read/write replica splitting, and NoSQL document stores (file, memory, MongoDB) — see [docs/database.md](docs/database.md) and [docs/nosql.md](docs/nosql.md).
+**Databases:** SQLite, MySQL, PostgreSQL, SQL Server, read/write replica splitting, and NoSQL document stores (file, memory, MongoDB) — see [docs/database.md](https://taliffsss.github.io/naluz-framework-docs/database/overview/) and [docs/nosql.md](https://taliffsss.github.io/naluz-framework-docs/database/nosql/).
 
 ### Factories & seeders
 
@@ -214,7 +214,7 @@ php naluz migrate:fresh --seed
 | Malicious uploads | content-sniffed type, mandatory allow-list, extension from your list, random file name |
 | N+1 queries | lazy-load guard throws in local/testing |
 
-See [docs/security.md](docs/security.md) for details and what the framework deliberately does **not** do for you.
+See [docs/security.md](https://taliffsss.github.io/naluz-framework-docs/security/overview/) for details and what the framework deliberately does **not** do for you.
 
 ## Testing
 
@@ -225,19 +225,17 @@ vendor/bin/phpunit            # ~300 tests: unit, database, HTTP, security, cons
 
 Tests run against in-memory SQLite and boot the real application, so HTTP tests exercise the whole middleware stack;
 Redis tests start a throw-away `redis-server` (skipped if it isn't installed) and the mail tests talk to a scripted fake SMTP server.
-See [docs/testing.md](docs/testing.md).
+See [docs/testing.md](https://taliffsss.github.io/naluz-framework-docs/tooling/testing/).
 
 ## Documentation
 
-- [Getting started](docs/getting-started.md)
-- [Routing, HTTP & views](docs/http.md)
-- [Database: query builder, ORM, migrations](docs/database.md)
-- [GraphQL](docs/graphql.md) · [Providers & observers](docs/providers-and-observers.md) · [Templates](docs/templates.md) · [Queues](docs/queues.md) · [Mail](docs/mail.md) · [Scheduler](docs/scheduler.md) · [Storage & uploads](docs/storage.md)
-- [HTTP client (Guzzle, PSR-18)](docs/http-client.md) · [Logging & error handling](docs/logging.md)
-- [Model caching](docs/model-cache.md) · [Performance](docs/performance.md) · [Building packages](docs/packages.md)
-- [Security](docs/security.md)
-- [Architecture, PSR compliance & how it compares to Laravel](docs/architecture.md)
-- [Testing](docs/testing.md)
+The documentation lives in its own repository and is published as a searchable site:
+**<https://taliffsss.github.io/naluz-framework-docs/>** (source: [`naluz-framework-docs`](https://github.com/taliffsss/naluz-framework-docs)).
+
+- [Installation](https://taliffsss.github.io/naluz-framework-docs/prologue/installation/) · [Getting started](https://taliffsss.github.io/naluz-framework-docs/prologue/getting-started/) · [Configuration](https://taliffsss.github.io/naluz-framework-docs/prologue/configuration/)
+- [Routing](https://taliffsss.github.io/naluz-framework-docs/basics/routing/) · [Controllers](https://taliffsss.github.io/naluz-framework-docs/basics/controllers/) · [Middleware](https://taliffsss.github.io/naluz-framework-docs/basics/middleware/) · [Validation](https://taliffsss.github.io/naluz-framework-docs/basics/validation/)
+- [Database](https://taliffsss.github.io/naluz-framework-docs/database/overview/) · [Models](https://taliffsss.github.io/naluz-framework-docs/database/models/) · [Model caching](https://taliffsss.github.io/naluz-framework-docs/database/model-caching/) · [NoSQL](https://taliffsss.github.io/naluz-framework-docs/database/nosql/)
+- [Security](https://taliffsss.github.io/naluz-framework-docs/security/overview/) · [Queues](https://taliffsss.github.io/naluz-framework-docs/advanced/queues/) · [GraphQL](https://taliffsss.github.io/naluz-framework-docs/advanced/graphql/) · [CLI](https://taliffsss.github.io/naluz-framework-docs/tooling/cli/) · [Deployment](https://taliffsss.github.io/naluz-framework-docs/tooling/deployment/)
 
 ## License
 

@@ -12,5 +12,5 @@ $router->get('/ping', [StatusController::class, 'ping'])->name('ping');
 
 $router->apiResource('posts', PostController::class);
 
-// GraphQL: POST (queries + mutations) or GET (queries only). See docs/graphql.md.
+// GraphQL: POST (queries + mutations) or GET (queries only). See https://taliffsss.github.io/naluz-framework-docs/advanced/graphql/
 $router->match(['GET', 'POST'], '/graphql', [GraphQLController::class, 'handle'])->name('graphql')->middleware('jwt.optional');

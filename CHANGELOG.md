@@ -7,11 +7,11 @@
 - Model observers: `Model::observe()`, `#[ObservedBy]`, sample `UserObserver` / `PostObserver`, `make:observer`
   (needs `naluz/framework` ^1.2).
 - Built-in GraphQL server (`Naluz\GraphQL`): sample schema `app/GraphQL/AppSchema`, `/api/graphql` endpoint, `config/graphql.php`,
-  optional-auth middleware `jwt.optional`. See [docs/graphql.md](docs/graphql.md). See [docs/providers-and-observers.md](docs/providers-and-observers.md).
+  optional-auth middleware `jwt.optional`. See the [GraphQL](https://taliffsss.github.io/naluz-framework-docs/advanced/graphql/) and [providers and observers](https://taliffsss.github.io/naluz-framework-docs/advanced/providers/) documentation.
 
 ## 1.0.0 — first release
 
-Release notes: [docs/releases/v1.0.0.md](docs/releases/v1.0.0.md). The framework core is the separate package
+Release notes: [documentation](https://taliffsss.github.io/naluz-framework-docs/releases/v1-0-0/). The framework core is the separate package
 [`naluz/framework`](https://github.com/taliffsss/naluz-framework).
 
 Initial NaluzPHP release: container, router, PSR-15 pipeline, query builder, ORM, migrations, validation, sessions,
@@ -22,7 +22,7 @@ auth (session + JWT), CSRF, security headers, CORS, rate limiting, CLI, plus:
 - SQL Server (`sqlsrv`) support: dialect, schema builder, MERGE upserts, parameter/row chunking.
 - Read/write connections: separate sessions, replica pools (`DB_READ_HOST` list), sticky reads, failover, read-only
   replicas, `useWritePdo()`.
-- NoSQL document stores (`file`, `memory`, `mongodb`) with an injection-safe query builder (`docs/nosql.md`).
+- NoSQL document stores (`file`, `memory`, `mongodb`) with an injection-safe query builder (see the [documentation](https://taliffsss.github.io/naluz-framework-docs/database/nosql/)).
 - `php naluz run:server [--port=8001] [--host] [--workers]` replaces `serve`.
 - Compiled, auto-escaping template engine (`*.naluz.php`): `{{ }}` escapes, `{!! !!}` is raw; layouts, sections, stacks,
   includes, loops, `@csrf`, `@method`, `@json`, `@auth`/`@guest`.

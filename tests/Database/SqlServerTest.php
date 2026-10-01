@@ -84,7 +84,7 @@ final class RecordingSqlServer extends Connection
 
 /**
  * Microsoft SQL Server. The SQL it needs is generated and pinned here; there is no SQL Server in the test environment,
- * so these tests prove the dialect rules, not a live round trip (see docs/database.md).
+ * so these tests prove the dialect rules, not a live round trip (see the Database drivers page of the documentation site).
  */
 final class SqlServerTest extends TestCase
 {
