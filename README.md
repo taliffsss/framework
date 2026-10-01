@@ -55,7 +55,7 @@ database/       migrations
 public/         the only web-accessible directory (index.php)
 resources/views plain-PHP templates with layouts
 routes/         web.php (sessions + CSRF) and api.php (stateless, /api prefix, rate limited)
-packages/framework/  the framework core, its own Composer package `naluz/framework` (namespace Naluz\); installed into vendor/
+vendor/naluz/framework  the framework itself (namespace Naluz\), installed by Composer from https://github.com/taliffsss/naluz-framework
 storage/        logs, cache, sessions, sqlite file
 tests/          PHPUnit suite
 naluz           command-line entry point

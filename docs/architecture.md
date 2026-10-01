@@ -35,7 +35,7 @@ Verified, not just claimed: `tests/Unit/PsrComplianceTest.php` asserts the inter
 
 (PSR-2, PSR-5, PSR-8, PSR-9, PSR-10, PSR-19, PSR-21 are abandoned, drafts, or withdrawn, and are not applicable.)
 
-## Components (`packages/framework/src/`)
+## Components (`vendor/naluz/framework/src/`)
 
 `Container` · `Config` · `Foundation` (Application, providers, exception handler, emitter) · `Http` (+ `Middleware`) ·
 `Routing` · `Database` (`Query`, `Schema`, `Migrations`, `Orm`) · `Validation` · `Security` · `Session` · `Auth` ·
@@ -93,14 +93,11 @@ HTTP client · cache tags/locks · API resources.
 
 ## Core package
 
-The framework core is the Composer package `naluz/framework` (`packages/framework/`). The application requires it, so
-`composer install` puts it in `vendor/naluz/framework`. While it lives in this repository it is linked through a Composer
-`path` repository. To publish it as its own repository:
+The framework core is a separate Composer package, [`naluz/framework`](https://github.com/taliffsss/naluz-framework).
+The application's `composer.json` requires it through a `vcs` repository entry, so `composer install` puts the whole
+framework in `vendor/naluz/framework`. Framework changes are made in that repository; the app picks them up with
+`composer update naluz/framework`.
 
-```bash
-git subtree split --prefix=packages/framework -b framework-split
-git push git@github.com:<you>/naluz-framework.git framework-split:main   # then tag a release, e.g. v1.0.0
-```
-
-Remove the temporary `"version"` line from the package's `composer.json` (tags define versions). Submit that repository to Packagist, then in the application's `composer.json` drop the `repositories` entry and require
-`"naluz/framework": "^1.0"` (or keep a `vcs` repository entry pointing at the repo).
+It is currently required as `dev-main`. Once a release is tagged (`git tag v1.0.0 && git push origin v1.0.0` in the
+framework repository), change the requirement to `"^1.0"`. Registering the package on Packagist lets you drop the `vcs`
+`repositories` entry.

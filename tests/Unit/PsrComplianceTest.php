@@ -95,16 +95,16 @@ final class PsrComplianceTest extends TestCase
     public function testPsr4AutoloadingMapsNamespacesToDirectories(): void
     {
         $composer = json_decode((string) file_get_contents(dirname(__DIR__, 2) . '/composer.json'), true);
-        $core = json_decode((string) file_get_contents(dirname(__DIR__, 2) . '/packages/framework/composer.json'), true);
+        $core = json_decode((string) file_get_contents(dirname(__DIR__, 2) . '/vendor/naluz/framework/composer.json'), true);
         $this->assertSame('src/', $core['autoload']['psr-4']['Naluz\\']);
         $this->assertSame('app/', $composer['autoload']['psr-4']['App\\']);
         // every class file's path matches its namespace + name (PSR-4), so the autoloader can find them all
-        $it = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator(dirname(__DIR__, 2) . '/packages/framework/src', \FilesystemIterator::SKIP_DOTS));
+        $it = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator(dirname(__DIR__, 2) . '/vendor/naluz/framework/src', \FilesystemIterator::SKIP_DOTS));
         foreach ($it as $f) {
             if ($f->getExtension() !== 'php' || $f->getFilename() === 'helpers.php') {
                 continue;
             }
-            $rel = substr($f->getPathname(), strlen(dirname(__DIR__, 2) . '/packages/framework/src/'), -4);
+            $rel = substr($f->getPathname(), strlen(dirname(__DIR__, 2) . '/vendor/naluz/framework/src/'), -4);
             $class = 'Naluz\\' . str_replace('/', '\\', $rel);
             $this->assertTrue(class_exists($class) || interface_exists($class) || trait_exists($class) || enum_exists($class), "PSR-4: {$class} not autoloadable");
         }

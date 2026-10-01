@@ -16,6 +16,6 @@ Only the latest release receives security fixes while the framework is pre-1.x s
 
 ## Scope
 
-In scope: the framework code (`packages/framework/src/`), the default configuration, and the starter app.
+In scope: the framework code (the separate `naluz/framework` package, https://github.com/taliffsss/naluz-framework), the default configuration, and the starter app.
 Out of scope: vulnerabilities in applications built on NaluzPHP, third-party packages, or misconfiguration that
 contradicts `docs/security.md` (for example running with `APP_DEBUG=true` in production).

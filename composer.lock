@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c9442bbc6ca7f4545152533d6e74d7ce",
+    "content-hash": "0a39b09f5168ae09c00785726803c3b5",
     "packages": [
         {
             "name": "guzzlehttp/guzzle",
@@ -339,11 +339,17 @@
         },
         {
             "name": "naluz/framework",
-            "version": "1.0.0",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/taliffsss/naluz-framework.git",
+                "reference": "76f13e3cbee9ca22614cd6ddf4fc76877c63f857"
+            },
             "dist": {
-                "type": "path",
-                "url": "packages/framework",
-                "reference": "9a9059ef27e5d949f8ff39f8f55048ccde2f9ac6"
+                "type": "zip",
+                "url": "https://api.github.com/repos/taliffsss/naluz-framework/zipball/76f13e3cbee9ca22614cd6ddf4fc76877c63f857",
+                "reference": "76f13e3cbee9ca22614cd6ddf4fc76877c63f857",
+                "shasum": ""
             },
             "require": {
                 "ext-fileinfo": "*",
@@ -374,6 +380,7 @@
                 "ext-redis": "Not required: NaluzPHP ships its own Redis client.",
                 "mongodb/mongodb": "MongoDB driver for NoSQL (needs ext-mongodb); the file and memory NoSQL drivers need nothing."
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -393,6 +400,7 @@
                 }
             ],
             "description": "NaluzPHP framework core: container, HTTP/PSR-15 router, ORM + query builder, NoSQL, queues, mail, scheduler, storage, templates, security.",
+            "homepage": "https://github.com/taliffsss/naluz-framework",
             "keywords": [
                 "framework",
                 "mailer",
@@ -405,10 +413,11 @@
                 "scheduler",
                 "templating"
             ],
-            "transport-options": {
-                "symlink": true,
-                "relative": true
-            }
+            "support": {
+                "source": "https://github.com/taliffsss/naluz-framework/tree/main",
+                "issues": "https://github.com/taliffsss/naluz-framework/issues"
+            },
+            "time": "2026-10-01T05:08:38+00:00"
         },
         {
             "name": "nyholm/psr7",
@@ -3231,7 +3240,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "naluz/framework": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
