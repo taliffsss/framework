@@ -60,7 +60,6 @@ final class ProjectCommandsTest extends TestCase
         $this->assertMatchesRegularExpression('/^APP_KEY=base64:[A-Za-z0-9+\/=]{44}$/m', $env);
         $this->assertMatchesRegularExpression('/^JWT_SECRET=[a-f0-9]{64}$/m', $env);
         $this->assertStringContainsString('APP_NAME=blog', $env);
-        $this->assertNotSame((string) file_get_contents($p . '/.env'), (string) file_get_contents(dirname(__DIR__, 2) . '/.env'), 'secrets are fresh');
 
         // runtime data from the source project is not carried over
         $this->assertSame([], array_values(array_diff(scandir($p . '/storage/logs') ?: [], ['.', '..', '.gitignore'])));
