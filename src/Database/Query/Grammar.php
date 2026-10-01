@@ -42,6 +42,9 @@ class Grammar
 
     public function quote(string $identifier): string
     {
+        if ($this->driver === 'sqlsrv') {
+            return '[' . str_replace(']', ']]', $identifier) . ']';
+        }
         $q = $this->driver === 'mysql' ? '`' : '"';
         return $q . str_replace($q, $q . $q, $identifier) . $q;
     }
@@ -82,7 +85,9 @@ class Grammar
     public function compileSelect(Builder $q): string
     {
         $parts = [];
-        $parts[] = 'SELECT ' . ($q->distinct ? 'DISTINCT ' : '') . $this->compileColumns($q);
+        // SQL Server cannot FETCH 0 rows, so "limit 0" becomes TOP (0)
+        $top = $this->driver === 'sqlsrv' && $q->limit === 0 ? 'TOP (0) ' : '';
+        $parts[] = 'SELECT ' . ($q->distinct ? 'DISTINCT ' : '') . $top . $this->compileColumns($q);
         $parts[] = 'FROM ' . $this->wrap($q->from);
 
         foreach ($q->joins as $join) {
@@ -102,6 +107,8 @@ class Grammar
                 fn (array $o) => $o['raw'] ?? $this->wrap($o['column']) . ' ' . $this->direction($o['direction']),
                 $q->orders
             ));
+        } elseif ($this->driver === 'sqlsrv' && $q->limit !== 0 && ($q->limit !== null || $q->offset !== null)) {
+            $parts[] = 'ORDER BY (SELECT 0)'; // OFFSET/FETCH is only valid after an ORDER BY
         }
         $parts[] = $this->compileLimit($q);
         return trim(implode(' ', array_filter($parts)));
@@ -112,7 +119,8 @@ class Grammar
         if ($q->aggregate !== null) {
             [$fn, $column] = $q->aggregate;
             $column = $column === '*' ? '*' : $this->wrap($column);
-            return strtoupper($fn) . '(' . ($q->distinct && $column !== '*' ? 'DISTINCT ' : '') . $column . ') AS aggregate';
+            return strtoupper($fn) . '(' . ($q->distinct && $column !== '*' ? 'DISTINCT ' : '') . $column . ') AS '
+                . ($this->driver === 'sqlsrv' ? '[aggregate]' : 'aggregate');
         }
         return $this->columnize($q->columns ?: ['*']);
     }
@@ -155,6 +163,12 @@ class Grammar
 
     private function compileLimit(Builder $q): string
     {
+        if ($this->driver === 'sqlsrv') {
+            if ($q->limit === 0 || ($q->limit === null && $q->offset === null)) {
+                return '';
+            }
+            return 'OFFSET ' . (int) ($q->offset ?? 0) . ' ROWS' . ($q->limit !== null ? ' FETCH NEXT ' . (int) $q->limit . ' ROWS ONLY' : '');
+        }
         $sql = '';
         if ($q->limit !== null) {
             $sql = 'LIMIT ' . (int) $q->limit;
@@ -168,6 +182,9 @@ class Grammar
     /** @param list<array<string,mixed>> $rows */
     public function compileInsert(string $table, array $rows, bool $ignore = false): string
     {
+        if ($ignore && $this->driver === 'sqlsrv') {
+            throw new \InvalidArgumentException('insert(…, ignore: true) is not supported on SQL Server; use upsert() or catch the duplicate-key error.');
+        }
         $columns = array_keys($rows[0]);
         $placeholders = '(' . implode(', ', array_fill(0, count($columns), '?')) . ')';
         $verb = $ignore && $this->driver === 'mysql' ? 'INSERT IGNORE' : 'INSERT';
@@ -186,6 +203,9 @@ class Grammar
      */
     public function compileUpsert(string $table, array $rows, array $uniqueBy, array $update): string
     {
+        if ($this->driver === 'sqlsrv') {
+            return $this->compileMerge($table, $rows, $uniqueBy, $update);
+        }
         $sql = $this->compileInsert($table, $rows);
         if ($this->driver === 'mysql') {
             return $sql . ' ON DUPLICATE KEY UPDATE '
@@ -193,6 +213,21 @@ class Grammar
         }
         return $sql . ' ON CONFLICT (' . $this->columnize($uniqueBy) . ') DO UPDATE SET '
             . implode(', ', array_map(fn ($c) => $this->wrap($c) . ' = excluded.' . $this->wrap($c), $update));
+    }
+
+    /** SQL Server has no ON CONFLICT: upsert is a MERGE (which must end with a semicolon). */
+    private function compileMerge(string $table, array $rows, array $uniqueBy, array $update): string
+    {
+        $columns = array_keys($rows[0]);
+        $values = implode(', ', array_fill(0, count($rows), '(' . implode(', ', array_fill(0, count($columns), '?')) . ')'));
+        $on = implode(' AND ', array_map(fn ($c) => 'target.' . $this->wrap($c) . ' = source.' . $this->wrap($c), $uniqueBy));
+        $sql = 'MERGE ' . $this->wrap($table) . ' AS target USING (VALUES ' . $values . ') AS source (' . $this->columnize($columns) . ') ON ' . $on;
+        if ($update !== []) {
+            $sql .= ' WHEN MATCHED THEN UPDATE SET '
+                . implode(', ', array_map(fn ($c) => 'target.' . $this->wrap($c) . ' = source.' . $this->wrap($c), $update));
+        }
+        return $sql . ' WHEN NOT MATCHED THEN INSERT (' . $this->columnize($columns) . ') VALUES ('
+            . implode(', ', array_map(fn ($c) => 'source.' . $this->wrap($c), $columns)) . ');';
     }
 
     /** @param list<string> $columns */

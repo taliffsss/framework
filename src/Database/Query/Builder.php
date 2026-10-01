@@ -126,6 +126,9 @@ class Builder
         if ($values instanceof self) {
             $this->wheres[] = ['type' => 'insub', 'column' => $column, 'query' => $values, 'not' => $not, 'boolean' => $boolean];
         } else {
+            if ($this->connection->driver() === 'sqlsrv' && count($values) > 2000) {
+                throw new \InvalidArgumentException('SQL Server accepts at most 2100 parameters per statement: split the whereIn() list (e.g. array_chunk) or use a subquery/join.');
+            }
             $this->wheres[] = ['type' => 'in', 'column' => $column, 'values' => array_values($values), 'not' => $not, 'boolean' => $boolean];
         }
         return $this;
@@ -561,8 +564,11 @@ class Builder
         if ($rows === []) {
             return true;
         }
-        $sql = $this->connection->grammar()->compileInsert((string) $this->from, $rows, $ignore);
-        return $this->connection->statement($sql, $this->flatten($rows));
+        $grammar = $this->connection->grammar();
+        foreach ($this->chunkRows($rows) as $chunk) {
+            $this->connection->statement($grammar->compileInsert((string) $this->from, $chunk, $ignore), $this->flatten($chunk));
+        }
+        return true;
     }
 
     public function insertGetId(array $values, string $sequence = 'id'): int|string
@@ -592,8 +598,12 @@ class Builder
             return 0;
         }
         $update ??= array_values(array_diff(array_keys($rows[0]), $uniqueBy));
-        $sql = $this->connection->grammar()->compileUpsert((string) $this->from, $rows, $uniqueBy, $update);
-        return $this->connection->affecting($sql, $this->flatten($rows));
+        $affected = 0;
+        foreach ($this->chunkRows($rows) as $chunk) {
+            $sql = $this->connection->grammar()->compileUpsert((string) $this->from, $chunk, $uniqueBy, $update);
+            $affected += $this->connection->affecting($sql, $this->flatten($chunk));
+        }
+        return $affected;
     }
 
     public function update(array $values): int
@@ -635,6 +645,23 @@ class Builder
     public function truncate(): void
     {
         $this->connection->statement($this->connection->grammar()->compileTruncate((string) $this->from));
+    }
+
+    /**
+     * SQL Server allows at most 1000 rows per INSERT … VALUES and 2100 bound parameters per statement, so large bulk
+     * writes are split into several statements there. Other drivers send one statement.
+     *
+     * @param list<array<string,mixed>> $rows
+     * @return list<list<array<string,mixed>>>
+     */
+    private function chunkRows(array $rows): array
+    {
+        if ($this->connection->driver() !== 'sqlsrv') {
+            return [$rows];
+        }
+        $perRow = max(1, count($rows[0]));
+        $size = max(1, min(1000, intdiv(2000, $perRow)));
+        return array_chunk($rows, $size);
     }
 
     /** @return list<array<string,mixed>> */

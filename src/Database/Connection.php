@@ -363,7 +363,7 @@ class Connection
         if ($this->transactions === 0) {
             $this->pdo()->beginTransaction();
         } else {
-            $this->pdo()->exec('SAVEPOINT naluz_' . $this->transactions);
+            $this->pdo()->exec(($this->driver === 'sqlsrv' ? 'SAVE TRANSACTION naluz_' : 'SAVEPOINT naluz_') . $this->transactions);
         }
         $this->transactions++;
     }
@@ -379,7 +379,9 @@ class Connection
                 $this->notifyWrite($sql, true, null);
             }
         } else {
-            $this->pdo()->exec('RELEASE SAVEPOINT naluz_' . $this->transactions);
+            if ($this->driver !== 'sqlsrv') { // SQL Server has no RELEASE: a savepoint simply ends with its transaction
+                $this->pdo()->exec('RELEASE SAVEPOINT naluz_' . $this->transactions);
+            }
         }
     }
 
@@ -390,7 +392,7 @@ class Connection
             $this->pdo()->rollBack();
             $this->pendingWrites = [];
         } else {
-            $this->pdo()->exec('ROLLBACK TO SAVEPOINT naluz_' . $this->transactions);
+            $this->pdo()->exec(($this->driver === 'sqlsrv' ? 'ROLLBACK TRANSACTION naluz_' : 'ROLLBACK TO SAVEPOINT naluz_') . $this->transactions);
         }
     }
 

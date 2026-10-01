@@ -358,6 +358,7 @@ final class ModelCache
             [
             "/^INSERT\\s+(?:OR\\s+\\w+\\s+|IGNORE\\s+)?INTO\\s+{$id}/i",
             "/^REPLACE\\s+INTO\\s+{$id}/i",
+            "/^MERGE\\s+(?:INTO\\s+)?{$id}/i",
             "/^UPDATE\\s+(?:OR\\s+\\w+\\s+)?{$id}/i",
             "/^DELETE\\s+FROM\\s+{$id}/i",
             "/^TRUNCATE\\s+(?:TABLE\\s+)?{$id}/i",
