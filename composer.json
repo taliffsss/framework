@@ -1,19 +1,57 @@
 {
-    "name": "manluz/inhouse-framework",
+    "name": "naluz/naluzphp",
+    "description": "NaluzPHP — a modern, secure PHP framework for monolithic apps and REST APIs, with a built-in ORM and query builder.",
     "type": "project",
+    "license": "MIT",
+    "keywords": ["framework", "php", "orm", "query-builder", "rest-api", "psr"],
     "authors": [
-        {
-            "name": "Mark Anthony Naluz",
-            "email": "anthony.naluz15@gmail.com"
-        }
+        {"name": "Mark Anthony Naluz", "email": "anthony.naluz15@gmail.com"}
     ],
+    "require": {
+        "php": "^8.2",
+        "ext-pdo": "*",
+        "ext-mbstring": "*",
+        "ext-openssl": "*",
+        "ext-sodium": "*",
+        "nyholm/psr7": "^1.8",
+        "nyholm/psr7-server": "^1.1",
+        "psr/container": "^2.0",
+        "psr/event-dispatcher": "^1.0",
+        "psr/http-factory": "^1.0",
+        "psr/http-message": "^2.0",
+        "psr/http-server-handler": "^1.0",
+        "psr/http-server-middleware": "^1.0",
+        "psr/log": "^3.0",
+        "psr/simple-cache": "^3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
+    },
     "autoload": {
-		"psr-4": {
-			"Mark\\": [
-                "app",
-                "system"
-            ]
-		}
-	},
-    "require": {}
+        "psr-4": {
+            "Naluz\\": "src/",
+            "App\\": "app/"
+        },
+        "files": ["src/Support/helpers.php"]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Naluz\\Tests\\": "tests/"
+        }
+    },
+    "bin": ["naluz"],
+    "scripts": {
+        "test": "phpunit",
+        "serve": "@php naluz serve",
+        "post-create-project-cmd": [
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
+            "@php naluz key:generate"
+        ]
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
 }

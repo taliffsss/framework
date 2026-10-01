@@ -1,0 +1,42 @@
+<?php
+
+declare(strict_types=1);
+
+use Naluz\Http\Middleware;
+
+return [
+    'name' => env('APP_NAME', 'NaluzPHP'),
+    'env' => env('APP_ENV', 'production'),
+    // Secure by default: debug output must be switched on explicitly.
+    'debug' => (bool) env('APP_DEBUG', false),
+    'url' => env('APP_URL', 'http://localhost'),
+    'timezone' => env('APP_TIMEZONE', 'UTC'),
+    'key' => env('APP_KEY', ''),
+    'previous_keys' => [],
+    'cache' => env('CACHE_DRIVER', 'file'),
+    'log_level' => env('LOG_LEVEL', 'debug'),
+
+    /** Extra service providers: classes extending Naluz\Foundation\ServiceProvider. */
+    'providers' => [],
+
+    /** Runs on every request, outermost first. */
+    'middleware' => [
+        Middleware\SecurityHeaders::class,
+        Middleware\Cors::class,
+        Middleware\MethodOverride::class,
+    ],
+
+    'middleware_aliases' => [
+        'session' => Middleware\StartSession::class,
+        'csrf' => Middleware\VerifyCsrfToken::class,
+        'throttle' => Middleware\Throttle::class,
+        'auth' => Middleware\Authenticate::class,
+        'jwt' => Middleware\AuthenticateJwt::class,
+    ],
+
+    /** `web` wraps routes/web.php; `api` wraps routes/api.php (stateless: no cookies, no CSRF). */
+    'middleware_groups' => [
+        'web' => ['session', 'csrf'],
+        'api' => ['throttle:60,1'],
+    ],
+];
