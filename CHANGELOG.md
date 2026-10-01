@@ -1,8 +1,15 @@
 # Changelog
 
-## Unreleased
+## 1.0.0 — first release
 
-### Added
+Release notes: [docs/releases/v1.0.0.md](docs/releases/v1.0.0.md). The framework core is the separate package
+[`naluz/framework`](https://github.com/taliffsss/naluz-framework).
+
+Initial NaluzPHP release: container, router, PSR-15 pipeline, query builder, ORM, migrations, validation, sessions,
+auth (session + JWT), CSRF, security headers, CORS, rate limiting, CLI, plus:
+
+
+#### Added
 - SQL Server (`sqlsrv`) support: dialect, schema builder, MERGE upserts, parameter/row chunking.
 - Read/write connections: separate sessions, replica pools (`DB_READ_HOST` list), sticky reads, failover, read-only
   replicas, `useWritePdo()`.
@@ -22,49 +29,45 @@
 - Route caching (`route:cache`), `naluz new` project scaffolder, `migrate:fresh`, `db:seed`, `view:clear`,
   Composer package auto-discovery (`extra.naluz.providers`).
 
-### Changed
+#### Changed
 - Real environment variables now take precedence over `.env`.
 
-## 1.0.0
-- Initial NaluzPHP release: container, router, PSR-15 pipeline, query builder, ORM, migrations, validation,
-  sessions, auth (session + JWT), CSRF, security headers, CORS, rate limiting, CLI.
+### PSR coverage
 
-## Unreleased (PSR coverage)
-
-### Added
+#### Added
 - PSR-6 (`Cache\Psr6\CacheItemPool` over any PSR-16 cache), PSR-13 (`Http\Link`, `LinkProvider`, `Paginator::links()`),
   PSR-18 via Guzzle (`Http` wrapper with JSON helpers, bounded redirects that drop credentials cross-origin, SSRF guard),
   PSR-20 (`SystemClock`, `FrozenClock`).
 - `ErrorHandler`: warnings → exceptions, deprecations logged, uncaught exceptions and fatals logged.
 - `phpcs.xml.dist` + CI step: PSR-12 enforced (0 errors).
 
-### Changed
+#### Changed
 - `FileLogger` falls back to `error_log()` when the log file can't be written, instead of dropping the message.
 - Code reformatted to PSR-12.
 
-## Unreleased (logging)
+### Logging
 
-### Added
+#### Added
 - Channel-based logging (`config/logging.php`): `daily` (with retention), `single`, `stderr`/`stdout`, `errorlog`, `slack`,
   `stack`, `null`, `custom`; per-channel levels; JSON or line format; `logger()->channel('slack')`.
 - `SlackLogger`: critical+ by default, escaped content, no traces unless enabled, never throws, webhook URL validated.
 
-### Changed
+#### Changed
 - `LoggerInterface` now resolves to `LogManager`; `app.log_level` was replaced by `logging.channels.*.level` (`LOG_LEVEL`).
 
-## Unreleased (model cache)
+### Model cache
 
-### Added
+#### Added
 - Automatic model-level query caching: `MODEL_CACHING=true`, `MODEL_CACHE_DRIVER=local|redis`, `MODEL_CACHE_TTL`,
   `MODEL_CACHE_ENCRYPT`. Table-version invalidation driven by connection-level write detection (query builder, pivots,
   raw SQL, migrations), transaction-safe, delete/DDL flush for FK cascades, raw-SQL queries never cached.
 - `withoutCache()`, `cacheFor()`, `Model::flushCache()`, per-model `$cache` / `$cacheTtl`, `model-cache:flush|prune`.
 - `Connection::onWrite()` / `DatabaseManager::listenForWrites()` hooks; `FileCache::prune()`.
 
-### Changed (model cache)
+#### Changed (model cache)
 - Default TTL is now **300 seconds (5 minutes)** (`MODEL_CACHE_TTL`).
 
-### Added (model cache)
+#### Added (model cache)
 - **Re-caching:** after new/updated/deleted data is committed, recently cached queries on the changed tables are re-run and
   stored again (`MODEL_CACHE_RECACHE`, `_RECACHE_LIMIT`, `_RECACHE_DEBOUNCE`).
 - Store-failure fallback (`MODEL_CACHE_FALLBACK`), writes that match no rows invalidate nothing,
