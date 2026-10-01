@@ -184,7 +184,6 @@ See [docs/testing.md](docs/testing.md).
 - [Security](docs/security.md)
 - [Architecture, PSR compliance & how it compares to Laravel](docs/architecture.md)
 - [Testing](docs/testing.md)
-- [Migrating from the legacy code in this repo](docs/migrating-from-legacy.md)
 
 ## License
 
