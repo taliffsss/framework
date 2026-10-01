@@ -22,6 +22,20 @@ final class FileCache extends ArrayCache
         return true;
     }
 
+    /** Delete expired entries (they are otherwise only removed when read). @return int files removed */
+    public function prune(): int
+    {
+        $n = 0;
+        foreach (glob($this->directory . '/*.cache') ?: [] as $file) {
+            $raw = @file_get_contents($file);
+            $entry = $raw === false ? null : $this->decode($raw);
+            if ($entry === null || ($entry[1] !== null && $entry[1] <= time())) {
+                $n += @unlink($file) ? 1 : 0;
+            }
+        }
+        return $n;
+    }
+
     public function delete(string $key): bool
     {
         $this->assertKey($key);

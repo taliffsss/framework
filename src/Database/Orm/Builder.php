@@ -25,6 +25,11 @@ class Builder
 
     /** @var array<string,\Closure|null> */
     private array $eagerLoad = [];
+    /** Reads whose results are cached (when the model cache is on). pluck/value/aggregates return plain data. */
+    private const CACHED_READS = ['exists', 'doesntExist', 'count', 'min', 'max', 'avg', 'sum', 'pluck', 'value'];
+
+    private bool $noCache = false;
+    private ?int $cacheSeconds = null;
     private bool $withTrashed = false;
     private bool $onlyTrashed = false;
 
@@ -51,6 +56,44 @@ class Builder
             }
         }
         return $query;
+    }
+
+    /** Skip the model cache for this query (read live from the database, store nothing). */
+    public function withoutCache(): static
+    {
+        $this->noCache = true;
+        return $this;
+    }
+
+    /** Cache this query for `$seconds` instead of the default TTL. */
+    public function cacheFor(int $seconds): static
+    {
+        $this->cacheSeconds = max(1, $seconds);
+        return $this;
+    }
+
+    /**
+     * Run `$load` through the model cache when that is safe: cache on, model not opted out, no raw SQL,
+     * not inside a transaction (uncommitted data must never be cached), table not excluded.
+     *
+     * @template T
+     * @param \Closure():T $load
+     * @return T
+     */
+    private function remember(string $kind, QueryBuilder $query, \Closure $load, array $args = []): mixed
+    {
+        $cache = $this->noCache ? null : $this->model->modelCache();
+        $connection = $query->connection;
+        if ($cache === null || $connection->transactionLevel() > 0 || $query->hasRawSql() || !$cache->canCache($query->tables())) {
+            return $load();
+        }
+        return $cache->remember(
+            $connection->name(),
+            $query->tables(),
+            $kind . '|' . $query->toSql() . '|' . json_encode([$query->getBindings(), $args], JSON_PARTIAL_OUTPUT_ON_ERROR),
+            $this->cacheSeconds ?? $this->model->cacheTtl(),
+            $load
+        );
     }
 
     public function withTrashed(): static
@@ -88,7 +131,8 @@ class Builder
     /** @return Collection<int,Model> */
     public function get(): Collection
     {
-        $models = $this->hydrate($this->toBase()->get()->all());
+        $base = $this->toBase();
+        $models = $this->hydrate($this->remember('rows', $base, fn () => $base->get()->all()));
         if ($models !== [] && $this->eagerLoad !== []) {
             $models = $this->eagerLoadRelations($models);
         }
@@ -123,7 +167,7 @@ class Builder
     {
         $perPage = max(1, min($perPage, 1000));
         $page = max(1, $page);
-        $total = $this->toBase()->count();
+        $total = $this->count();
         $items = $total > 0 ? (clone $this)->forPage($page, $perPage)->get() : new Collection();
         return new Paginator($items, $total, $perPage, $page);
     }
@@ -241,6 +285,13 @@ class Builder
         if (method_exists($this->model, $scope)) {
             $this->model->{$scope}($this, ...$args);
             return $this;
+        }
+        if (in_array($method, self::CACHED_READS, true)) {
+            $base = $this->toBase();
+            if ($method === 'pluck') { // a Collection can't be stored; cache the plain array
+                return new Collection($this->remember('pluck', $base, fn () => $base->pluck(...$args)->all(), $args));
+            }
+            return $this->remember($method, $base, fn () => $base->{$method}(...$args), $args);
         }
         if (in_array($method, self::PASSTHRU, true)) {
             return $this->toBase()->{$method}(...$args);

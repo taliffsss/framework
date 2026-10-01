@@ -11,6 +11,8 @@ final class DatabaseManager
 {
     /** @var array<string,Connection> */
     private array $connections = [];
+    /** @var list<\Closure(string,string):void> */
+    private array $writeListeners = [];
 
     /** @param array{default:string,connections:array<string,array<string,mixed>>} $config */
     public function __construct(private readonly array $config)
@@ -20,12 +22,33 @@ final class DatabaseManager
     public function connection(?string $name = null): Connection
     {
         $name ??= $this->config['default'];
-        return $this->connections[$name] ??= $this->make($name);
+        if (!isset($this->connections[$name])) {
+            $this->connections[$name] = $connection = $this->make($name);
+            $this->attach($name, $connection);
+        }
+        return $this->connections[$name];
     }
 
     public function extend(string $name, Connection $connection): void
     {
         $this->connections[$name] = $connection;
+        $this->attach($name, $connection);
+    }
+
+    /** Listen for data/schema changes on every connection, existing and future: `fn (string $connection, string $sql)`. */
+    public function listenForWrites(\Closure $listener): void
+    {
+        $this->writeListeners[] = $listener;
+        foreach ($this->connections as $name => $connection) {
+            $connection->onWrite(fn (string $sql) => $listener($name, $sql));
+        }
+    }
+
+    private function attach(string $name, Connection $connection): void
+    {
+        foreach ($this->writeListeners as $listener) {
+            $connection->onWrite(fn (string $sql) => $listener($name, $sql));
+        }
     }
 
     public function table(string $table, ?string $as = null): Builder

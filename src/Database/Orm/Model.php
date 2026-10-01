@@ -54,6 +54,10 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
     protected array $appends = [];
     /** @var array<string,string> attribute => int|float|bool|string|array|json|datetime|date|encrypted|hashed|EnumClass */
     protected array $casts = [];
+    /** Opt this model out of MODEL_CACHING with `false` (e.g. rows that must always be read live). */
+    protected bool $cache = true;
+    /** Per-model cache TTL in seconds (null = MODEL_CACHE_TTL). */
+    protected ?int $cacheTtl = null;
 
     private array $attributes = [];
     private array $original = [];
@@ -63,6 +67,7 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
     private ?string $morphTypeOverride = null;
 
     private static bool $preventLazyLoading = false;
+    private static ?\Naluz\Database\ModelCache $modelCache = null;
     /** @var array<string,class-string<Model>> */
     private static array $morphMap = [];
 
@@ -127,6 +132,30 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
     public function setRawMorphType(string $type): void
     {
         $this->morphTypeOverride = $type;
+    }
+
+    /** @internal wired by ModelCacheServiceProvider when MODEL_CACHING=true */
+    public static function setModelCache(?\Naluz\Database\ModelCache $cache): void
+    {
+        self::$modelCache = $cache;
+    }
+
+    /** The active query cache for this model, or null when caching is off or the model opted out. */
+    public function modelCache(): ?\Naluz\Database\ModelCache
+    {
+        return $this->cache ? self::$modelCache : null;
+    }
+
+    public function cacheTtl(): ?int
+    {
+        return $this->cacheTtl;
+    }
+
+    /** Drop every cached query that reads this model's table. */
+    public static function flushCache(): void
+    {
+        $model = new static();
+        self::$modelCache?->flushTable($model->connection()->name(), $model->getTable());
     }
 
     /** Forget every registered model event listener (useful in tests). */
@@ -444,7 +473,7 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
 
     public function fresh(): ?static
     {
-        return $this->exists ? static::query()->withTrashed()->find($this->getKey()) : null;
+        return $this->exists ? static::query()->withoutCache()->withTrashed()->find($this->getKey()) : null;
     }
 
     public function refresh(): static

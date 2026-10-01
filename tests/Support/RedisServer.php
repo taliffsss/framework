@@ -51,6 +51,11 @@ trait RedisServer
         parent::tearDownAfterClass();
     }
 
+    protected static function redisPort(): int
+    {
+        return self::$redisPort;
+    }
+
     protected function redis(): Client
     {
         if (self::$redisProc === null) {

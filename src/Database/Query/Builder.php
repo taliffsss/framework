@@ -289,6 +289,61 @@ class Builder
         return (new static($this->connection))->from($this->from ?? '');
     }
 
+    // ---------------------------------------------------------------- introspection (used by the model cache)
+
+    /** @return list<string> every table this query reads (from, joins, subqueries) */
+    public function tables(): array
+    {
+        $tables = [];
+        $add = static function (string|Expression|null $t) use (&$tables): void {
+            if (is_string($t) && $t !== '') {
+                $tables[] = strtolower(preg_split('/\s+as\s+/i', trim($t))[0]);
+            }
+        };
+        $add($this->from instanceof Expression ? null : $this->from);
+        foreach ($this->joins as $j) {
+            $add($j['table']);
+        }
+        foreach ([...$this->wheres, ...$this->havings] as $w) {
+            if (isset($w['query']) && $w['query'] instanceof self) {
+                array_push($tables, ...$w['query']->tables());
+            }
+        }
+        return array_values(array_unique($tables));
+    }
+
+    /** True when the query contains raw SQL, whose table dependencies cannot be known. */
+    public function hasRawSql(): bool
+    {
+        if ($this->from instanceof Expression) {
+            return true;
+        }
+        foreach ($this->columns as $c) {
+            if ($c instanceof Expression && !str_ends_with((string) $c, 'AS one')) {
+                return true;
+            }
+        }
+        foreach ([...$this->wheres, ...$this->havings] as $w) {
+            if (($w['type'] ?? '') === 'raw' || (($w['column'] ?? null) instanceof Expression)) {
+                return true;
+            }
+            if (isset($w['query']) && $w['query'] instanceof self && $w['query']->hasRawSql()) {
+                return true;
+            }
+        }
+        foreach ($this->orders as $o) {
+            if (isset($o['raw']) || ($o['column'] ?? null) instanceof Expression) {
+                return true;
+            }
+        }
+        foreach ($this->groups as $g) {
+            if ($g instanceof Expression) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // ---------------------------------------------------------------- reading
 
     public function toSql(): string

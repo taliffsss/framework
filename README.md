@@ -157,6 +157,16 @@ $schedule->job(new PruneOldRecords())->dailyAt('03:00')->withoutOverlapping();  
 $path = Uploads::store($file, storage('public'), 'avatars', Uploads::IMAGES);    // content-sniffed, random name, allow-list required
 ```
 
+### Model caching — one `.env` flag
+
+```env
+MODEL_CACHING=true
+MODEL_CACHE_DRIVER=redis      # or local
+```
+
+Every model query is cached and invalidated automatically on any write (including query-builder writes, pivots, soft deletes,
+cascades, transactions). Per-model opt-out with `protected bool $cache = false;`. See [docs/model-cache.md](docs/model-cache.md).
+
 ### Factories & seeders
 
 ```php
@@ -175,7 +185,7 @@ php naluz migrate:fresh --seed
 | `make:controller / model / middleware / migration / factory / seeder / job / provider Name` | generators |
 | `queue:work` · `queue:failed` · `queue:retry <id\|all>` · `queue:flush` | queues |
 | `schedule:run` · `schedule:list` | scheduler |
-| `route:list` · `route:cache` · `route:clear` · `view:clear` | routing & caches |
+| `route:list` · `route:cache` · `route:clear` · `view:clear` · `model-cache:flush` · `model-cache:prune` | routing & caches |
 
 ## Security defaults
 
@@ -221,7 +231,7 @@ See [docs/testing.md](docs/testing.md).
 - [Database: query builder, ORM, migrations](docs/database.md)
 - [Templates](docs/templates.md) · [Queues](docs/queues.md) · [Mail](docs/mail.md) · [Scheduler](docs/scheduler.md) · [Storage & uploads](docs/storage.md)
 - [HTTP client (Guzzle, PSR-18)](docs/http-client.md) · [Logging & error handling](docs/logging.md)
-- [Performance](docs/performance.md) · [Building packages](docs/packages.md)
+- [Model caching](docs/model-cache.md) · [Performance](docs/performance.md) · [Building packages](docs/packages.md)
 - [Security](docs/security.md)
 - [Architecture, PSR compliance & how it compares to Laravel](docs/architecture.md)
 - [Testing](docs/testing.md)

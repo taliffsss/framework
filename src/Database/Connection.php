@@ -18,6 +18,10 @@ class Connection
     private ?\PDO $pdo = null;
     private ?\Closure $factory = null;
     private int $transactions = 0;
+    /** @var list<callable(string):void> */
+    private array $writeListeners = [];
+    /** @var list<string> write statements issued inside the current transaction */
+    private array $pendingWrites = [];
     /** @var list<callable(string,array,float):void> */
     private array $listeners = [];
     private readonly Grammar $grammar;
@@ -143,6 +147,12 @@ class Connection
         foreach ($this->listeners as $listener) {
             $listener($sql, $bindings, (microtime(true) - $start) * 1000);
         }
+        if ($this->writeListeners !== [] && self::isWrite($sql)) {
+            $this->notifyWrite($sql);
+            if ($this->transactions > 0) {
+                $this->pendingWrites[] = $sql;
+            }
+        }
         return $stmt;
     }
 
@@ -159,6 +169,32 @@ class Connection
         } finally {
             $stmt->closeCursor();
         }
+    }
+
+    /**
+     * Be told about every statement that changes data or schema (INSERT/UPDATE/DELETE/DDL…), including ones issued by
+     * `Connection::select()` such as PostgreSQL's `INSERT … RETURNING`. Inside a transaction the listener is called
+     * again after the outermost COMMIT, so caches invalidated early can't be re-filled with pre-commit data.
+     *
+     * @param callable(string):void $listener receives the SQL
+     */
+    public function onWrite(callable $listener): void
+    {
+        $this->writeListeners[] = $listener;
+    }
+
+    private function notifyWrite(string $sql): void
+    {
+        foreach ($this->writeListeners as $listener) {
+            $listener($sql);
+        }
+    }
+
+    private static function isWrite(string $sql): bool
+    {
+        $keyword = strtoupper(strtok(ltrim($sql), " \t\n\r(") ?: '');
+        return !in_array($keyword, ['SELECT', 'WITH', 'PRAGMA', 'SAVEPOINT', 'RELEASE', 'ROLLBACK', 'BEGIN', 'COMMIT', 'SET', 'SHOW', 'EXPLAIN', 'DESCRIBE', 'USE'], true)
+            || ($keyword === 'WITH' && preg_match('/\b(INSERT|UPDATE|DELETE)\b/i', $sql) === 1);
     }
 
     public function listen(callable $listener): void
@@ -199,6 +235,11 @@ class Connection
         $this->transactions--;
         if ($this->transactions === 0) {
             $this->pdo()->commit();
+            $pending = array_unique($this->pendingWrites);
+            $this->pendingWrites = [];
+            foreach ($pending as $sql) {
+                $this->notifyWrite($sql);
+            }
         } else {
             $this->pdo()->exec('RELEASE SAVEPOINT naluz_' . $this->transactions);
         }
@@ -209,6 +250,7 @@ class Connection
         $this->transactions--;
         if ($this->transactions === 0) {
             $this->pdo()->rollBack();
+            $this->pendingWrites = [];
         } else {
             $this->pdo()->exec('ROLLBACK TO SAVEPOINT naluz_' . $this->transactions);
         }

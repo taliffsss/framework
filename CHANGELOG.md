@@ -46,3 +46,12 @@
 
 ### Changed
 - `LoggerInterface` now resolves to `LogManager`; `app.log_level` was replaced by `logging.channels.*.level` (`LOG_LEVEL`).
+
+## Unreleased (model cache)
+
+### Added
+- Automatic model-level query caching: `MODEL_CACHING=true`, `MODEL_CACHE_DRIVER=local|redis`, `MODEL_CACHE_TTL`,
+  `MODEL_CACHE_ENCRYPT`. Table-version invalidation driven by connection-level write detection (query builder, pivots,
+  raw SQL, migrations), transaction-safe, delete/DDL flush for FK cascades, raw-SQL queries never cached.
+- `withoutCache()`, `cacheFor()`, `Model::flushCache()`, per-model `$cache` / `$cacheTtl`, `model-cache:flush|prune`.
+- `Connection::onWrite()` / `DatabaseManager::listenForWrites()` hooks; `FileCache::prune()`.
