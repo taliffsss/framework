@@ -37,17 +37,18 @@ final class StorageTest extends TestCase
 
     public function testBasicOperations(): void
     {
-        $this->disk->put('a/b/hello.txt', 'hi');
+        $text = "Hello, this is a plain text file.\nIt has two lines.\n"; // long enough for every libmagic version to detect
+        $this->disk->put('a/b/hello.txt', $text);
         $this->assertTrue($this->disk->exists('a/b/hello.txt'));
-        $this->assertSame('hi', $this->disk->get('a/b/hello.txt'));
-        $this->assertSame(2, $this->disk->size('a/b/hello.txt'));
+        $this->assertSame($text, $this->disk->get('a/b/hello.txt'));
+        $this->assertSame(strlen($text), $this->disk->size('a/b/hello.txt'));
         $this->assertSame('text/plain', $this->disk->mimeType('a/b/hello.txt'));
         $this->assertEqualsWithDelta(time(), $this->disk->lastModified('a/b/hello.txt'), 5);
 
         $this->disk->copy('a/b/hello.txt', 'c.txt');
         $this->disk->move('c.txt', 'd/e.txt');
         $this->assertFalse($this->disk->exists('c.txt'));
-        $this->assertSame('hi', $this->disk->get('d/e.txt'));
+        $this->assertSame($text, $this->disk->get('d/e.txt'));
         $this->assertSame(['a/b/hello.txt'], $this->disk->files('a/b'));
         $this->assertSame(['a', 'd'], $this->disk->directories());
         $this->assertTrue($this->disk->delete('d/e.txt'));
