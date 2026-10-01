@@ -312,6 +312,44 @@ class Builder
         return array_values(array_unique($tables));
     }
 
+    /**
+     * The exact SQL + bindings a read (`rows`, `count`, `sum`, `min`, `max`, `avg`, `exists`, `doesntExist`, `value`,
+     * `pluck`) executes. The model cache stores this so it can re-run the query to refresh a stale entry.
+     *
+     * @param list<mixed> $args the arguments the read method was called with
+     * @return array{0:string,1:list<mixed>}
+     */
+    public function readPlan(string $kind, array $args = []): array
+    {
+        $q = clone $this;
+        switch ($kind) {
+            case 'count':
+            case 'sum':
+            case 'min':
+            case 'max':
+            case 'avg':
+                $q->aggregate = [$kind, (string) ($args[0] ?? '*')];
+                $q->orders = [];
+                $q->limit = $q->offset = null;
+                break;
+            case 'exists':
+            case 'doesntExist':
+                $q->select(new Expression('1 AS one'))->limit(1);
+                break;
+            case 'value':
+                $q->select((string) $args[0])->limit(1);
+                break;
+            case 'pluck':
+                $q->select(...(isset($args[1]) && $args[1] !== null ? [(string) $args[0], (string) $args[1]] : [(string) $args[0]]));
+                break;
+            case 'rows':
+                break;
+            default:
+                throw new \InvalidArgumentException("Unknown read kind [{$kind}].");
+        }
+        return [$q->toSql(), $q->getBindings()];
+    }
+
     /** True when the query contains raw SQL, whose table dependencies cannot be known. */
     public function hasRawSql(): bool
     {

@@ -164,8 +164,9 @@ MODEL_CACHING=true
 MODEL_CACHE_DRIVER=redis      # or local
 ```
 
-Every model query is cached and invalidated automatically on any write (including query-builder writes, pivots, soft deletes,
-cascades, transactions). Per-model opt-out with `protected bool $cache = false;`. See [docs/model-cache.md](docs/model-cache.md).
+Every model query is cached for **5 minutes** and, when data is created, updated or deleted, the affected entries are
+invalidated and **re-cached** automatically (including query-builder writes, pivots, soft deletes, cascades, transactions).
+Falls back to the database if the cache store is down. Per-model opt-out with `protected bool $cache = false;`. See [docs/model-cache.md](docs/model-cache.md).
 
 ### Factories & seeders
 

@@ -10,8 +10,18 @@ return [
     // local (files in storage/cache/models) | redis (REDIS_* settings in config/redis.php) | array (per request; tests)
     'driver' => env('MODEL_CACHE_DRIVER', 'local'),
 
-    // Safety net for changes this app cannot see (other services, DB triggers, manual SQL). Seconds.
-    'ttl' => (int) env('MODEL_CACHE_TTL', 3600),
+    // How long a cached query may live: 300 s = 5 minutes. This is the safety net for changes this app cannot see
+    // (other services, DB triggers, manual SQL); changes made through this app invalidate immediately.
+    'ttl' => (int) env('MODEL_CACHE_TTL', 300),
+
+    // Re-cache: after new or changed data is committed, recently cached queries on the affected tables are re-run and
+    // stored again, so the next reader gets a warm, fresh entry instead of hitting the database.
+    'recache' => filter_var(env('MODEL_CACHE_RECACHE', true), FILTER_VALIDATE_BOOLEAN),
+    'recache_limit' => (int) env('MODEL_CACHE_RECACHE_LIMIT', 20),      // distinct recent queries remembered / re-run per write
+    'recache_debounce' => (int) env('MODEL_CACHE_RECACHE_DEBOUNCE', 2), // seconds: a burst of writes re-caches once
+
+    // If the cache store is down (e.g. Redis), keep serving from the database instead of failing requests.
+    'fallback' => filter_var(env('MODEL_CACHE_FALLBACK', true), FILTER_VALIDATE_BOOLEAN),
 
     'prefix' => 'naluz_mc_',  // PSR-16 keys may not contain : { } ( ) / \\ @
 

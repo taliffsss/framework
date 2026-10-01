@@ -25,11 +25,16 @@ final class ModelCacheServiceProvider extends ServiceProvider
             $prefix = (string) $cfg->get('model_cache.prefix', 'naluz_mc_');
             return new ModelCache(
                 $store,
-                (int) $cfg->get('model_cache.ttl', 3600),
+                (int) $cfg->get('model_cache.ttl', ModelCache::DEFAULT_TTL),
                 $prefix,
                 (array) $cfg->get('model_cache.exclude_tables', []),
                 (string) $cfg->get('model_cache.flush_on_delete', 'all'),
-                $cfg->get('model_cache.encrypt') ? $c->make(Encrypter::class) : null
+                $cfg->get('model_cache.encrypt') ? $c->make(Encrypter::class) : null,
+                recache: (bool) $cfg->get('model_cache.recache', true),
+                recacheLimit: (int) $cfg->get('model_cache.recache_limit', 20),
+                recacheDebounce: (int) $cfg->get('model_cache.recache_debounce', 2),
+                fallback: (bool) $cfg->get('model_cache.fallback', true),
+                logger: $c->make(\Psr\Log\LoggerInterface::class)
             );
         });
     }
@@ -42,8 +47,10 @@ final class ModelCacheServiceProvider extends ServiceProvider
             return;
         }
         $cache = $this->app->make(ModelCache::class);
-        $this->app->make(DatabaseManager::class)->listenForWrites(
-            fn (string $connection, string $sql) => $cache->handleWrite($connection, $sql)
+        $manager = $this->app->make(DatabaseManager::class);
+        $cache->resolveConnectionsWith(fn (string $name) => $manager->connection($name));
+        $manager->listenForWrites(
+            fn (string $connection, string $sql, bool $committed, ?int $affected) => $cache->handleWrite($connection, $sql, $committed, $affected)
         );
         Model::setModelCache($cache);
     }

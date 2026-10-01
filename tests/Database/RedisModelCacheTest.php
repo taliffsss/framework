@@ -69,7 +69,40 @@ final class RedisModelCacheTest extends TestCase
         $this->assertNotEmpty($keys);
         $ttl = (int) $redis->command('TTL', $keys[0]);
         $this->assertGreaterThan(0, $ttl);
-        $this->assertLessThanOrEqual(3600, $ttl, 'MODEL_CACHE_TTL bounds how long a stale entry could live');
+        $this->assertLessThanOrEqual(300, $ttl, 'default TTL is 5 minutes');
+    }
+
+    public function testUpdatedDataIsRecachedInRedis(): void
+    {
+        $u = User::create(['name' => 'A', 'email' => 'a@x.io', 'password' => 'p']);
+        User::find($u->id);                       // hot
+        $u->update(['name' => 'Updated']);        // invalidate + re-cache into Redis
+
+        $name = null;
+        $this->assertSame(0, $this->selects(function () use (&$name, $u) {
+            $name = User::find($u->id)->name;
+        }));
+        $this->assertSame('Updated', $name, 'the reader got fresh data from the warm Redis entry');
+        $this->assertGreaterThan(0, app(\Naluz\Database\ModelCache::class)->recached);
+    }
+
+    public function testRedisOutageFallsBackToTheDatabase(): void
+    {
+        $u = User::create(['name' => 'A', 'email' => 'a@x.io', 'password' => 'p']);
+        // point the cache at a dead port: every cache call throws, queries must still work
+        $dead = new \Naluz\Redis\RedisCache(new \Naluz\Redis\Client('127.0.0.1', 1, timeout: 0.2));
+        $cache = new \Naluz\Database\ModelCache($dead, recache: true);
+        Model::setModelCache($cache);
+        $sink = tempnam(sys_get_temp_dir(), 'e');
+        $old = ini_set('error_log', $sink);
+        try {
+            $this->assertSame('A', User::find($u->id)->name);
+            $u->update(['name' => 'B']);
+            $this->assertSame('B', User::find($u->id)->name);
+        } finally {
+            ini_set('error_log', (string) $old);
+            unlink($sink);
+        }
     }
 
     public function testSharedAcrossProcessesLikeAppServers(): void

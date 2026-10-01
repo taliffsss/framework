@@ -11,7 +11,7 @@ final class DatabaseManager
 {
     /** @var array<string,Connection> */
     private array $connections = [];
-    /** @var list<\Closure(string,string):void> */
+    /** @var list<\Closure(string,string,bool,?int):void> */
     private array $writeListeners = [];
 
     /** @param array{default:string,connections:array<string,array<string,mixed>>} $config */
@@ -35,19 +35,19 @@ final class DatabaseManager
         $this->attach($name, $connection);
     }
 
-    /** Listen for data/schema changes on every connection, existing and future: `fn (string $connection, string $sql)`. */
+    /** Listen for data/schema changes on every connection, existing and future: `fn (string $connection, string $sql, bool $committed, ?int $affected)`. */
     public function listenForWrites(\Closure $listener): void
     {
         $this->writeListeners[] = $listener;
         foreach ($this->connections as $name => $connection) {
-            $connection->onWrite(fn (string $sql) => $listener($name, $sql));
+            $connection->onWrite(fn (string $sql, bool $committed, ?int $affected) => $listener($name, $sql, $committed, $affected));
         }
     }
 
     private function attach(string $name, Connection $connection): void
     {
         foreach ($this->writeListeners as $listener) {
-            $connection->onWrite(fn (string $sql) => $listener($name, $sql));
+            $connection->onWrite(fn (string $sql, bool $committed, ?int $affected) => $listener($name, $sql, $committed, $affected));
         }
     }
 

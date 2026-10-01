@@ -5,7 +5,8 @@ Automatic, transparent caching of ORM queries — switched on by one line in `.e
 ```env
 MODEL_CACHING=true            # off by default
 MODEL_CACHE_DRIVER=redis      # local (files in storage/cache/models, default) | redis
-MODEL_CACHE_TTL=3600          # safety-net seconds (see "What it can't know")
+MODEL_CACHE_TTL=300           # seconds an entry lives: 300 = 5 minutes (default)
+MODEL_CACHE_RECACHE=true      # re-run hot queries after a write so readers get fresh cached data (default)
 MODEL_CACHE_ENCRYPT=false     # true = encrypt cached rows with APP_KEY
 ```
 
@@ -19,6 +20,41 @@ User::where('email', $email)->first();   // fresh data
 ```
 
 With `MODEL_CACHING` unset or `false` nothing is hooked, nothing is looked up: zero overhead.
+
+## TTL and re-caching
+
+- **Every entry lives 5 minutes** (`MODEL_CACHE_TTL=300`). That is the upper bound on staleness from changes this application
+  can't see (see below); changes made through this app are visible immediately.
+- **New or updated data is re-cached.** Writes invalidate the affected cached queries at once. Then, as soon as the write is
+  *committed*, the framework re-runs the queries that were recently cached on the changed tables and stores the fresh results.
+  The first reader after a change therefore hits a warm cache instead of all of them hitting the database at the same moment
+  (a "cache stampede"):
+
+```php
+$user = User::find(1);              // cached
+$user->update(['name' => 'Anna']);  // invalidates, then re-caches the queries that read `users`
+User::find(1)->name;                // 'Anna' — served from cache, zero SQL
+```
+
+  Every kind of read is re-cached: models, `count`/`sum`/`min`/`max`/`avg`, `exists`, `value`, `pluck`, `paginate`, eager loads.
+  The re-cache is checked against a live read in the tests, so a refreshed entry always equals what the database returns.
+
+Guard rails so writes stay cheap:
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `MODEL_CACHE_RECACHE` | `true` | `false` = invalidate only; the next read repopulates the cache itself |
+| `MODEL_CACHE_RECACHE_LIMIT` | `20` | at most this many distinct recent queries are remembered and re-run per write |
+| `MODEL_CACHE_RECACHE_DEBOUNCE` | `2` | seconds: a burst of writes re-caches once (later writes still invalidate; reads repopulate lazily) |
+
+Re-caching waits for `COMMIT` (nothing is ever cached from uncommitted data), is skipped for statements that changed no rows,
+and is skipped for schema changes. If a remembered query can no longer run, it is dropped silently and the write succeeds.
+
+## If the cache store goes down
+
+With `MODEL_CACHE_FALLBACK=true` (default) a failing store (e.g. Redis unreachable) never fails a request: reads go straight to
+the database, writes succeed, and a warning is logged. Set it to `false` to surface cache errors instead. Entries written
+before an outage can be served again when the store returns, but never for longer than their 5-minute TTL.
 
 ## Drivers
 
@@ -54,6 +90,7 @@ class AuditLog extends Model { protected bool $cache = false; }       // never c
 class Country  extends Model { protected ?int $cacheTtl = 86400; }    // longer TTL for reference data
 
 User::query()->withoutCache()->find($id);    // read live, store nothing
+Model::runWithoutCache(fn () => Report::all()); // a whole block without caching (writes still invalidate)
 User::query()->cacheFor(60)->get();          // this query only
 $user->fresh();  $user->refresh();           // always read live
 User::flushCache();                          // drop everything cached for the users table
@@ -61,6 +98,7 @@ User::flushCache();                          // drop everything cached for the u
 
 ```bash
 php naluz model-cache:flush      # invalidate and delete everything
+php naluz model-cache:flush --model="App\\Models\\Post"   # one model's table only
 php naluz model-cache:prune      # delete expired files (local driver)
 ```
 
@@ -70,11 +108,11 @@ php naluz model-cache:prune      # delete expired files (local driver)
 
 The cache sees writes made **through this application's database connections**. Changes it can't see are bounded only by the TTL:
 
-- another application or service writing to the same database,
+- another application or service writing to the same database (entries are at most 5 minutes old),
 - database triggers, scheduled SQL, `ON UPDATE CASCADE`, manual edits in a SQL client,
 - replication lag if you read from replicas.
 
-Lower `MODEL_CACHE_TTL` (or set `$cache = false` on those models) when that matters, or call `model-cache:flush` after
+Lower `MODEL_CACHE_TTL` below the default 300 (or set `$cache = false` on those models) when that matters, or call `model-cache:flush` after
 out-of-band changes. Also avoid it where results depend on per-session database state (e.g. PostgreSQL row-level security
 using session variables), since cache entries are shared across users.
 
@@ -88,4 +126,4 @@ using session variables), since cache entries are shared across users.
 
 ## Debugging
 
-`app(Naluz\Database\ModelCache::class)->hits` / `->misses` count cache hits and misses in the current process.
+`app(Naluz\Database\ModelCache::class)->hits` / `->misses` / `->recached` count hits, misses and re-cached queries in the current process.

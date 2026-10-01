@@ -32,7 +32,7 @@ final class ModelCacheCommands extends Command
     public function description(): string
     {
         return $this->kind === 'model-cache:flush'
-            ? 'Invalidate and delete all cached model queries'
+            ? 'Invalidate cached model queries: everything, or one model with --model=App\\Models\\Post'
             : 'Delete expired model-cache files (local driver)';
     }
 
@@ -40,6 +40,17 @@ final class ModelCacheCommands extends Command
     {
         if ($this->kind === 'model-cache:flush') {
             $cache = $this->app->make(ModelCache::class);
+            $model = $input->option('model');
+            if (is_string($model)) { // php naluz model-cache:flush --model="App\\Models\\Post"
+                if (!is_subclass_of($model, \Naluz\Database\Orm\Model::class)) {
+                    $output->error("[{$model}] is not a model class.");
+                    return 1;
+                }
+                $instance = new $model();
+                $cache->flushTable($instance->connection()->name(), $instance->getTable());
+                $output->info("Model cache flushed for {$model}.");
+                return 0;
+            }
             $cache->flushAll();
             $cache->purge();
             $output->info('Model cache flushed.');

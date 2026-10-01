@@ -87,12 +87,14 @@ class Builder
         if ($cache === null || $connection->transactionLevel() > 0 || $query->hasRawSql() || !$cache->canCache($query->tables())) {
             return $load();
         }
+        [$sql, $bindings] = $query->readPlan($kind, $args);
         return $cache->remember(
             $connection->name(),
             $query->tables(),
-            $kind . '|' . $query->toSql() . '|' . json_encode([$query->getBindings(), $args], JSON_PARTIAL_OUTPUT_ON_ERROR),
+            $kind . '|' . $sql . '|' . json_encode([$bindings, $args === [] || $kind === 'rows' ? [] : $args], JSON_PARTIAL_OUTPUT_ON_ERROR),
             $this->cacheSeconds ?? $this->model->cacheTtl(),
-            $load
+            $load,
+            ['kind' => $kind, 'sql' => $sql, 'bindings' => $bindings, 'args' => $args]
         );
     }
 

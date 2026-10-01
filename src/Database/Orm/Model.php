@@ -151,6 +151,12 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
         return $this->cacheTtl;
     }
 
+    /** Run a block with model caching switched off (reads go to the database; writes still invalidate). */
+    public static function runWithoutCache(\Closure $callback): mixed
+    {
+        return self::$modelCache === null ? $callback() : self::$modelCache->runWithout($callback);
+    }
+
     /** Drop every cached query that reads this model's table. */
     public static function flushCache(): void
     {

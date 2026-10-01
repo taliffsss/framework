@@ -18,10 +18,12 @@ class Connection
     private ?\PDO $pdo = null;
     private ?\Closure $factory = null;
     private int $transactions = 0;
-    /** @var list<callable(string):void> */
+    /** @var list<callable(string,bool,?int):void> */
     private array $writeListeners = [];
     /** @var list<string> write statements issued inside the current transaction */
     private array $pendingWrites = [];
+    /** @var list<array{0:string,1:int}> writes executed but not yet announced to listeners */
+    private array $queuedWrites = [];
     /** @var list<callable(string,array,float):void> */
     private array $listeners = [];
     private readonly Grammar $grammar;
@@ -148,10 +150,8 @@ class Connection
             $listener($sql, $bindings, (microtime(true) - $start) * 1000);
         }
         if ($this->writeListeners !== [] && self::isWrite($sql)) {
-            $this->notifyWrite($sql);
-            if ($this->transactions > 0) {
-                $this->pendingWrites[] = $sql;
-            }
+            // announced after the statement has been fully consumed (see run()), so listeners may run queries safely
+            $this->queuedWrites[] = [$sql, $stmt->rowCount()];
         }
         return $stmt;
     }
@@ -168,25 +168,47 @@ class Connection
             return $fetch($stmt);
         } finally {
             $stmt->closeCursor();
+            $this->dispatchWrites();
         }
     }
 
     /**
      * Be told about every statement that changes data or schema (INSERT/UPDATE/DELETE/DDL…), including ones issued by
-     * `Connection::select()` such as PostgreSQL's `INSERT … RETURNING`. Inside a transaction the listener is called
-     * again after the outermost COMMIT, so caches invalidated early can't be re-filled with pre-commit data.
+     * `Connection::select()` such as PostgreSQL's `INSERT … RETURNING`.
      *
-     * @param callable(string):void $listener receives the SQL
+     * The listener receives `(sql, committed, affectedRows)`:
+     *  - statements that matched no rows (`affectedRows === 0` for INSERT/UPDATE/DELETE) are not announced at all;
+     *  - inside a transaction `committed` is false; after the outermost COMMIT every such statement is announced again
+     *    with `committed === true` (and `affectedRows === null`), so caches invalidated early cannot be re-filled with
+     *    pre-commit data, and re-warming can wait for the data to really exist.
+     *
+     * @param callable(string,bool,?int):void $listener
      */
     public function onWrite(callable $listener): void
     {
         $this->writeListeners[] = $listener;
     }
 
-    private function notifyWrite(string $sql): void
+    private function notifyWrite(string $sql, bool $committed, ?int $affected): void
     {
         foreach ($this->writeListeners as $listener) {
-            $listener($sql);
+            $listener($sql, $committed, $affected);
+        }
+    }
+
+    private function dispatchWrites(): void
+    {
+        while ($this->queuedWrites !== []) {
+            [$sql, $affected] = array_shift($this->queuedWrites);
+            if ($affected === 0 && preg_match('/^\s*(INSERT|UPDATE|DELETE|REPLACE)\b/i', $sql)) {
+                continue; // nothing changed, nothing to invalidate
+            }
+            if ($this->transactions > 0) {
+                $this->pendingWrites[] = $sql;
+                $this->notifyWrite($sql, false, $affected);
+            } else {
+                $this->notifyWrite($sql, true, $affected);
+            }
         }
     }
 
@@ -238,7 +260,7 @@ class Connection
             $pending = array_unique($this->pendingWrites);
             $this->pendingWrites = [];
             foreach ($pending as $sql) {
-                $this->notifyWrite($sql);
+                $this->notifyWrite($sql, true, null);
             }
         } else {
             $this->pdo()->exec('RELEASE SAVEPOINT naluz_' . $this->transactions);

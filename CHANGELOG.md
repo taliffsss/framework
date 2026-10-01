@@ -55,3 +55,12 @@
   raw SQL, migrations), transaction-safe, delete/DDL flush for FK cascades, raw-SQL queries never cached.
 - `withoutCache()`, `cacheFor()`, `Model::flushCache()`, per-model `$cache` / `$cacheTtl`, `model-cache:flush|prune`.
 - `Connection::onWrite()` / `DatabaseManager::listenForWrites()` hooks; `FileCache::prune()`.
+
+### Changed (model cache)
+- Default TTL is now **300 seconds (5 minutes)** (`MODEL_CACHE_TTL`).
+
+### Added (model cache)
+- **Re-caching:** after new/updated/deleted data is committed, recently cached queries on the changed tables are re-run and
+  stored again (`MODEL_CACHE_RECACHE`, `_RECACHE_LIMIT`, `_RECACHE_DEBOUNCE`).
+- Store-failure fallback (`MODEL_CACHE_FALLBACK`), writes that match no rows invalidate nothing,
+  `Model::runWithoutCache()`, `model-cache:flush --model=…`, `Query\Builder::readPlan()`.
