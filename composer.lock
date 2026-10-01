@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d9609e7adfa656ee733e73f56099066f",
+    "content-hash": "af6f94d582cf8821ae26e3e844698234",
     "packages": [
         {
             "name": "guzzlehttp/guzzle",
@@ -336,6 +336,79 @@
                 }
             ],
             "time": "2026-08-24T09:13:11+00:00"
+        },
+        {
+            "name": "naluz/framework",
+            "version": "dev-claude/determined-knuth-dctj79",
+            "dist": {
+                "type": "path",
+                "url": "packages/framework",
+                "reference": "432aceaaff0926be247d6c39358fe8bfceb3ead6"
+            },
+            "require": {
+                "ext-fileinfo": "*",
+                "ext-mbstring": "*",
+                "ext-openssl": "*",
+                "ext-pdo": "*",
+                "ext-sodium": "*",
+                "guzzlehttp/guzzle": "^7.9",
+                "nyholm/psr7": "^1.8",
+                "nyholm/psr7-server": "^1.1",
+                "php": "^8.2",
+                "psr/cache": "^3.0",
+                "psr/clock": "^1.0",
+                "psr/container": "^2.0",
+                "psr/event-dispatcher": "^1.0",
+                "psr/http-client": "^1.0",
+                "psr/http-factory": "^1.0",
+                "psr/http-message": "^2.0",
+                "psr/http-server-handler": "^1.0",
+                "psr/http-server-middleware": "^1.0",
+                "psr/link": "^2.0",
+                "psr/log": "^3.0",
+                "psr/simple-cache": "^3.0"
+            },
+            "suggest": {
+                "ext-pcntl": "Lets queue:work shut down gracefully on SIGTERM/SIGINT.",
+                "ext-pdo_sqlsrv": "Microsoft SQL Server (with the Microsoft ODBC driver).",
+                "ext-redis": "Not required: NaluzPHP ships its own Redis client.",
+                "mongodb/mongodb": "MongoDB driver for NoSQL (needs ext-mongodb); the file and memory NoSQL drivers need nothing."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Naluz\\": "src/"
+                },
+                "files": [
+                    "src/Support/helpers.php"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Mark Anthony Naluz",
+                    "email": "anthony.naluz15@gmail.com"
+                }
+            ],
+            "description": "NaluzPHP framework core: container, HTTP/PSR-15 router, ORM + query builder, NoSQL, queues, mail, scheduler, storage, templates, security.",
+            "keywords": [
+                "framework",
+                "mailer",
+                "orm",
+                "php",
+                "psr",
+                "query-builder",
+                "queue",
+                "rest-api",
+                "scheduler",
+                "templating"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "nyholm/psr7",
@@ -3158,16 +3231,13 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "naluz/framework": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^8.2",
-        "ext-fileinfo": "*",
-        "ext-mbstring": "*",
-        "ext-openssl": "*",
-        "ext-pdo": "*",
-        "ext-sodium": "*"
+        "php": "^8.2"
     },
     "platform-dev": {},
     "plugin-api-version": "2.6.0"

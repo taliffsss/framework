@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <ruleset name="NaluzPHP">
     <description>PSR-12 (which includes PSR-1) for the framework, the starter app and the tests.</description>
-    <file>src</file>
+    <file>packages/framework/src</file>
     <file>app</file>
     <file>tests</file>
     <file>config</file>

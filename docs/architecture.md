@@ -20,7 +20,7 @@ Verified, not just claimed: `tests/Unit/PsrComplianceTest.php` asserts the inter
 |---|---|---|
 | 1 Basic Coding Standard | style | **0 errors** under `phpcs` (PSR-1 is part of the PSR-12 ruleset). Test files may hold several small fixture classes |
 | 3 Logger | `Log\FileLogger` | implemented (extends `Psr\Log\AbstractLogger`); the container serves `LoggerInterface` |
-| 4 Autoloading | `composer.json` | `Naluz\` → `src/`, `App\` → `app/`, `Database\Factories\|Seeders\`; a test checks every class file matches its namespace |
+| 4 Autoloading | `composer.json` | `Naluz\` → `src/` (in the `naluz/framework` package), `App\` → `app/`, `Database\Factories\|Seeders\`; a test checks every class file matches its namespace |
 | 6 Caching Interface | `Cache\Psr6\CacheItemPool` | implemented as an adapter over any PSR-16 cache (file, array, Redis); container serves `CacheItemPoolInterface` |
 | 7 HTTP Message | via `nyholm/psr7` | requests and responses are PSR-7 objects; `Naluz\Http\Response` extends the nyholm response |
 | 11 Container | `Container\Container` | implemented, with auto-wiring, singletons, aliases, method injection |
@@ -35,7 +35,7 @@ Verified, not just claimed: `tests/Unit/PsrComplianceTest.php` asserts the inter
 
 (PSR-2, PSR-5, PSR-8, PSR-9, PSR-10, PSR-19, PSR-21 are abandoned, drafts, or withdrawn, and are not applicable.)
 
-## Components (`src/`)
+## Components (`packages/framework/src/`)
 
 `Container` · `Config` · `Foundation` (Application, providers, exception handler, emitter) · `Http` (+ `Middleware`) ·
 `Routing` · `Database` (`Query`, `Schema`, `Migrations`, `Orm`) · `Validation` · `Security` · `Session` · `Auth` ·
@@ -90,3 +90,17 @@ HTTP client · cache tags/locks · API resources.
 - MySQL/PostgreSQL grammars are exercised by SQL-generation tests only; the executable suite runs on SQLite (+ a real Redis server).
 - Rate limiting is a fixed window (simple, slightly bursty at window edges).
 - The template engine is regex-based: directive arguments containing unbalanced parentheses inside strings are not supported.
+
+## Core package
+
+The framework core is the Composer package `naluz/framework` (`packages/framework/`). The application requires it, so
+`composer install` puts it in `vendor/naluz/framework`. While it lives in this repository it is linked through a Composer
+`path` repository. To publish it as its own repository:
+
+```bash
+git subtree split --prefix=packages/framework -b framework-split
+git push git@github.com:<you>/naluz-framework.git framework-split:main   # then tag a release, e.g. v1.0.0
+```
+
+Submit that repository to Packagist, then in the application's `composer.json` drop the `repositories` entry and require
+`"naluz/framework": "^1.0"` (or keep a `vcs` repository entry pointing at the repo).
