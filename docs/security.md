@@ -51,6 +51,14 @@ server to restore the real client IP (e.g. `mod_remoteip`, nginx `real_ip_module
 **Errors** — with `APP_DEBUG=false` clients only see generic messages; details go to `storage/logs/naluz-YYYY-MM-DD.log`
 (newlines in log context are neutralised).
 
+**Queues** — payloads are encrypted JSON (XChaCha20-Poly1305 with `APP_KEY`), never `unserialize()`d; a decoded class must
+extend `Job`; tampered payloads are quarantined in `failed_jobs`. **Mail** — CR/LF/NUL and malformed addresses are rejected
+before sending (no header or SMTP-command injection), `Bcc` never appears in headers, TLS certificates are verified.
+**Uploads** — type detected from content, mandatory allow-list, extension from your list, random name; storage paths reject
+`..`, absolute paths and symlink escapes. **Redis** — arguments are length-prefixed (no command injection); cached values are
+read with `allowed_classes => false`. **Templates** — `{{ }}` always escapes; view names can't traverse.
+**Polymorphic relations** — the `_type` column must resolve to a `Model` subclass (use a morph map).
+
 ## Your responsibility
 
 - Escape output: `e()` in views. Views are not auto-escaped (deliberately simple); never echo raw user input.

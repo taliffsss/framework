@@ -28,28 +28,45 @@ public/index.php → bootstrap/app.php → Application::boot()  (env, config, pr
 
 `Container` · `Config` · `Foundation` (Application, providers, exception handler, emitter) · `Http` (+ `Middleware`) ·
 `Routing` · `Database` (`Query`, `Schema`, `Migrations`, `Orm`) · `Validation` · `Security` · `Session` · `Auth` ·
-`View` · `Cache` · `Log` · `Events` · `Console` · `Support`
+`View` (+ `Compiler`) · `Cache` · `Redis` · `Queue` · `Mail` · `Schedule` · `Storage` · `Log` · `Events` · `Console` · `Support`
 
 ## Compared with Laravel
 
 Laravel is the benchmark for developer experience, so naming and ergonomics are deliberately similar
-(`Model::with()`, `$router->apiResource()`, `php naluz migrate`…). Differences, honestly stated:
+(`Model::with()`, `$router->apiResource()`, `php naluz migrate`, `Job::dispatch()`…). NaluzPHP does **not** claim to be
+"more advanced" feature-for-feature — Laravel has far more features and a vast ecosystem. What NaluzPHP offers instead is a
+much smaller, auditable codebase with stricter defaults. Honest comparison:
+
+### Where NaluzPHP is deliberately different (or stricter by default)
 
 | | NaluzPHP | Laravel |
 |---|---|---|
-| Size / dependencies | ~5k LOC, 2 runtime deps + PSR interfaces | hundreds of packages, far larger surface |
+| Size / dependencies | ~11k LOC, two runtime deps (`nyholm/psr7`, `-server`) + PSR interfaces; own Redis client, mailer, template engine | hundreds of packages |
 | HTTP layer | PSR-7/15 end to end (any PSR-15 middleware drops in) | Symfony HttpFoundation (PSR-7 via bridge) |
-| Mass assignment | **deny by default** (`$fillable` empty) | deny by default as well (`$guarded = ['*']`), but easily disabled with `$guarded = []` |
-| Identifiers in query builder | validated; non-identifiers throw | column names are quoted but not validated, so user-controlled column names are a known injection class |
-| Debug | off unless enabled | `APP_DEBUG` set by the skeleton's `.env.example` to `true` |
-| Security headers / CSP, CORS allow-list | on by default | opt-in via packages/middleware |
-| Templating | plain PHP + layouts (explicit `e()`) | Blade (auto-escaping, compiled) |
-| ORM | Active record, 4 relation types, eager loading, soft deletes, casts, events, scopes | far broader (polymorphic, through, morph maps, observers, factories…) |
-| Ecosystem | none yet | vast (queues, Horizon, Sanctum, Cashier, Nova…) |
-| Queues, mail, broadcasting, scheduler, file storage | not included | included |
+| Query builder identifiers | validated; non-identifiers throw (user-controlled column names can't inject) | quoted but not validated — a known injection class |
+| Debug | off unless explicitly enabled | enabled in the skeleton's `.env.example` |
+| Queue payloads | encrypted JSON, class must extend `Job`; no `unserialize` | PHP-serialised; encryption is opt-in per job |
+| Uploads | content-sniffed, **mandatory** allow-list, random names | validation rules are opt-in |
+| Security headers / CSP, CORS allow-list, CSRF `Origin` check | on by default | opt-in / packages |
+| Lazy-load (N+1) guard | on by default in `local`/`testing` | available, you enable it yourself |
+| Polymorphic `_type` column | must resolve to a `Model` subclass (+ morph map) | class name stored; morph map optional |
 
-NaluzPHP does **not** try to match Laravel feature-for-feature; it targets the core of monoliths and JSON APIs with a
-smaller, auditable codebase and stricter defaults.
+### Where Laravel is ahead (not built here)
+
+- **Queues:** batches, chains, unique jobs, rate limiting, SQS/Beanstalk drivers, Horizon dashboard. (Here: sync/database/redis, retries, backoff, failed jobs.)
+- **Mail:** many transports (SES, Mailgun, Postmark…), Markdown mailables, notifications across channels. (Here: SMTP/log/array.)
+- **Storage:** S3 and other cloud disks, temporary URLs. (Here: local disks + your own `Filesystem` implementation.)
+- **Scheduler:** per-task timezones, background runs, maintenance-mode awareness. (Here: cron expressions, overlap lock.)
+- **ORM:** `morphToMany`, pivot models, observers, global scopes, `withCount`/`whereHas`, attribute casting classes, API resources.
+- **Templates:** components/slots (`<x-…>`), `@once`, `@class`, `@error`, inheritance of `@parent`. (Here: layouts, sections, stacks, includes.)
+- **Route cache** can handle closures there (serialisable closures); here only controller routes can be cached.
+- **Everything else:** HTTP client, broadcasting, cache tags/locks, Sanctum/Passport/Socialite/Cashier, Telescope, Livewire/Inertia,
+  testing helpers (`assertJson`…), `tinker`, localisation, and the community/ecosystem.
+
+## Roadmap ideas
+
+S3 disk · queue batches/unique jobs · `whereHas`/`withCount` · template components · MySQL/PostgreSQL CI jobs ·
+HTTP client · cache tags/locks · API resources.
 
 ## Extending
 
@@ -57,9 +74,8 @@ smaller, auditable codebase and stricter defaults.
 - Use any PSR-15 middleware from Packagist in route or global stacks.
 - Add database drivers by extending `Query\Grammar` / `Schema\Schema` (currently `mysql`, `pgsql`, `sqlite`).
 
-## Known limitations / roadmap
+## Known limitations
 
-- Not yet included: queues, mail, file storage/uploads, scheduler, Redis cache/session drivers, polymorphic and
-  has-many-through relations, route caching, a templating compiler.
-- MySQL/PostgreSQL grammars are not run in CI yet (SQLite only).
-- Fixed-window rate limiting (simple, slightly bursty at window edges).
+- MySQL/PostgreSQL grammars are exercised by SQL-generation tests only; the executable suite runs on SQLite (+ a real Redis server).
+- Rate limiting is a fixed window (simple, slightly bursty at window edges).
+- The template engine is regex-based: directive arguments containing unbalanced parentheses inside strings are not supported.

@@ -66,7 +66,9 @@ final class Application extends Container
             \Naluz\Mail\MailServiceProvider::class,
             \Naluz\Storage\StorageServiceProvider::class,
             \Naluz\Schedule\ScheduleServiceProvider::class,
-            ...(array) $config->get('app.providers', [])];
+            ...(new PackageManifest($this->basePath))->providers((array) $config->get('app.dont_discover', [])),
+            ...(array) $config->get('app.providers', []),
+        ];
         foreach ($classes as $class) {
             $provider = new $class($this);
             $provider->register();

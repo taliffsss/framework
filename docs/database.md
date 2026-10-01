@@ -138,6 +138,46 @@ $user->load('posts');
 
 Eager loading uses one query per relation (`WHERE fk IN (…)`), eliminating N+1 queries — the test suite asserts it.
 
+#### Polymorphic relations
+
+One table of comments for many owner types:
+
+```php
+// comments: id, body, commentable_type, commentable_id
+class Post extends Model    { public function comments(): MorphMany { return $this->morphMany(Comment::class, 'commentable'); } }
+class Comment extends Model { public function commentable(): MorphTo { return $this->morphTo('commentable'); } }
+
+Model::morphMap(['post' => Post::class, 'video' => Video::class]);   // store aliases, not class names (recommended)
+
+$post->comments()->create(['body' => 'Nice']);
+Comment::with('commentable')->get();     // 1 query for comments + 1 per distinct type, however many rows
+```
+
+Also `morphOne`. The `_type` column is data, so it is **never trusted**: it must resolve (through the morph map when you
+define one) to a `Model` subclass, otherwise `InvalidArgumentException` — a tampered row cannot instantiate arbitrary classes.
+(`morphToMany` / nested eager loading through a `morphTo` are not implemented.)
+
+#### Has-many-through
+
+```php
+// Country → users → posts
+public function posts(): HasManyThrough { return $this->hasManyThrough(Post::class, User::class, 'country_id', 'user_id'); }
+public function latestPost(): HasOneThrough { return $this->hasOneThrough(Post::class, User::class)->latest('posts.id'); }
+Country::with('posts')->get();           // 2 queries
+```
+
+### The lazy-loading guard (N+1 detector)
+
+```php
+foreach (Post::all() as $post) { echo $post->author->name; }   // throws LazyLoadingViolationException
+// "Attempted to lazy load [author] on model [Post]. Eager load it with ::with('author') or ->load('author')."
+foreach (Post::with('author')->get() as $post) { … }           // fine
+```
+
+On by default when `APP_ENV` is `local`/`testing` or `APP_DEBUG=true` (override with `PREVENT_LAZY_LOADING=true|false`,
+or `Model::preventLazyLoading(false)`). Production never throws. Models created during the current request are exempt, and
+`load()` / calling the relation as a query (`$post->author()->first()`) are explicit and always allowed.
+
 ### Soft deletes, events, scopes
 
 ```php
@@ -161,3 +201,40 @@ Post::published()->latest()->paginate(10);
 auto-increment types) are handled in `Query\Grammar` and `Schema\Schema`. The automated suite runs on SQLite; the
 MySQL and PostgreSQL grammars are exercised only by SQL-generation unit tests — run the suite against your own server
 before relying on them in production (see [testing](testing.md)).
+
+## Factories & seeders
+
+```bash
+php naluz make:factory PostFactory        php naluz make:seeder PostSeeder
+php naluz db:seed [--class=Database\Seeders\DatabaseSeeder]      php naluz migrate:fresh --seed
+```
+
+```php
+// database/factories/PostFactory.php
+final class PostFactory extends Factory
+{
+    protected string $model = Post::class;
+
+    public function definition(): array
+    {
+        return [
+            'user_id' => UserFactory::new(),                 // nested factories are created and their id used
+            'title'   => ucfirst($this->fake()->words(4)),
+            'body'    => $this->fake()->paragraph(),
+        ];
+    }
+    public function published(): static { return $this->state(['published' => true]); }
+}
+
+// models: `use HasFactory;`
+User::factory()->create();                                   // persisted        ->make() = not persisted
+Post::factory(5)->published()->create(['user_id' => 1]);     // 5 rows with overrides
+Post::factory()->state(fn (array $a) => ['title' => strtoupper($a['title'])])->afterCreating(fn ($p) => …)->create();
+
+// database/seeders/DatabaseSeeder.php
+public function run(): void { User::factory(10)->create(); $this->call([PostSeeder::class]); }
+```
+
+`Naluz\Support\Fake` is a small built-in generator (names, emails, words/sentences, uuid, dates, numbers…);
+`Fake::seed(42)` makes data reproducible. Factories use `forceFill()` (trusted code, `$fillable` doesn't apply).
+`migrate:fresh` and `db:seed` refuse to run in production without `--force`.

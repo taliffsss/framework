@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2e95ec4b64c13d4f82ec77c98695ad24",
+    "content-hash": "9406a123d79b1c28349afafb8468e9be",
     "packages": [
         {
             "name": "nyholm/psr7",
@@ -2348,11 +2348,12 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^8.2",
-        "ext-pdo": "*",
+        "ext-fileinfo": "*",
         "ext-mbstring": "*",
         "ext-openssl": "*",
-        "ext-sodium": "*"
+        "ext-pdo": "*",
+        "ext-sodium": "*",
+        "php": "^8.2"
     },
     "platform-dev": {},
     "plugin-api-version": "2.6.0"

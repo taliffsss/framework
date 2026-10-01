@@ -77,23 +77,23 @@ Built-in: `SecurityHeaders`, `Cors`, `MethodOverride` (global) · `StartSession`
 
 ## Views
 
-Plain PHP with layouts and sections. **Output is not auto-escaped — wrap dynamic values in `e()`.**
+Views are `resources/views/<name>.naluz.php`, compiled to cached PHP by the built-in template engine. Output is
+**escaped by default**:
 
-```php
-<?php // resources/views/posts/show.php
-$this->extend('layouts/app', ['title' => $post->title]);
-$this->section('content'); ?>
-  <h1><?= e($post->title) ?></h1>
-  <?= $this->include('partials/comments', ['comments' => $post->comments]) ?>
-<?php $this->endSection();
-
-// layouts/app.php:   <title><?= e($title) ?></title> … <?= $this->yield('content') ?>
+```
+@extends('layouts/app')
+@section('title', $post->title)
+@section('content')
+  <h1>{{ $post->title }}</h1>
+  @foreach ($post->comments as $c) <p>{{ $c->body }}</p> @endforeach
+  <form method="POST" action="/posts">@csrf @method('PUT') …</form>
+@endsection
 ```
 
-Forms need `<?= csrf_field() ?>`. Validation failures from browsers redirect back with flashed `errors` and `old`
-input (passwords excluded): read with `app(Naluz\Session\Store::class)->get('errors')`.
+Full reference: [templates.md](templates.md). Plain `.php` views with `$this->e()` still work.
 
-Custom error pages: create `resources/views/errors/404.php` (any status code).
+Validation failures from browsers redirect back with flashed `errors` and `old` input (passwords excluded): read with
+`app(Naluz\Session\Store::class)->get('errors')`. Custom error pages: `resources/views/errors/404.naluz.php` (any status code).
 
 ## Sessions, cache, logging, events
 

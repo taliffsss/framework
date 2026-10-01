@@ -9,7 +9,11 @@
         "orm",
         "query-builder",
         "rest-api",
-        "psr"
+        "psr",
+        "queue",
+        "mailer",
+        "scheduler",
+        "templating"
     ],
     "authors": [
         {
@@ -18,13 +22,14 @@
         }
     ],
     "require": {
-        "php": "^8.2",
-        "ext-pdo": "*",
+        "ext-fileinfo": "*",
         "ext-mbstring": "*",
         "ext-openssl": "*",
+        "ext-pdo": "*",
         "ext-sodium": "*",
         "nyholm/psr7": "^1.8",
         "nyholm/psr7-server": "^1.1",
+        "php": "^8.2",
         "psr/container": "^2.0",
         "psr/event-dispatcher": "^1.0",
         "psr/http-factory": "^1.0",
@@ -69,5 +74,14 @@
         "sort-packages": true
     },
     "minimum-stability": "stable",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "suggest": {
+        "ext-redis": "Not required: NaluzPHP ships its own Redis client.",
+        "ext-pcntl": "Lets queue:work shut down gracefully on SIGTERM/SIGINT."
+    },
+    "extra": {
+        "naluz": {
+            "dont-discover": []
+        }
+    }
 }

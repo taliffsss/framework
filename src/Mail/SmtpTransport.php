@@ -24,6 +24,9 @@ final class SmtpTransport implements Transport
         private readonly ?\Closure $connector = null,
         private readonly string $helo = 'localhost',
     ) {
+        if (!preg_match('/^[A-Za-z0-9.\-\[\]:]{1,255}$/', $helo)) {
+            throw new \InvalidArgumentException('Invalid SMTP HELO name.'); // would otherwise allow SMTP command injection
+        }
         if (!in_array($encryption, ['tls', 'ssl', 'none'], true)) {
             throw new \InvalidArgumentException("Unknown SMTP encryption [{$encryption}].");
         }

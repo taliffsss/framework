@@ -2,6 +2,15 @@
 
 ## Install
 
+**As a starter for a new project** (from a clone of this repository):
+
+```bash
+php naluz new my-app            # copies the starter, writes .env with fresh APP_KEY/JWT_SECRET, runs composer install
+cd my-app && php naluz migrate && php naluz serve
+```
+
+Options: `--name=vendor/package` (sets composer name), `--no-install`, `--dir=/parent/dir`. Or manually:
+
 ```bash
 git clone https://github.com/taliffsss/framework.git my-app && cd my-app
 composer install

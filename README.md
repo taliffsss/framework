@@ -18,19 +18,20 @@ public function index(): Paginator
 - **PSR-native**: PSR-3, 4, 7, 11, 14, 15, 16, 17 (see [architecture](docs/architecture.md))
 - **Secure by default**: parameterised SQL with identifier allow-listing, mass-assignment protection, CSRF, hardened
   headers, Argon2id, authenticated encryption, strict sessions, rate limiting, CORS allow-list
-- **Small**: ~5k lines of framework code, two runtime dependencies beyond the PSR interfaces (`nyholm/psr7`, `nyholm/psr7-server`)
+- **Batteries included, still small**: ORM + query builder, compiled auto-escaping templates, queues, mail, scheduler,
+  file storage, Redis cache/session/queue, factories & seeders, route cache — ~11k lines, two runtime dependencies beyond
+  the PSR interfaces (`nyholm/psr7`, `nyholm/psr7-server`)
 
 ## Quick start
 
 ```bash
-git clone https://github.com/taliffsss/framework.git my-app
-cd my-app
+git clone https://github.com/taliffsss/framework.git naluzphp && cd naluzphp
 composer install
-cp .env.example .env
-php naluz key:generate --jwt                      # APP_KEY + JWT_SECRET
-touch storage/database.sqlite
-php naluz migrate
-php naluz serve                                   # http://127.0.0.1:8000
+php naluz new my-app                              # scaffolds a fresh project: .env, APP_KEY, JWT_SECRET, composer install
+cd ../my-app
+php naluz migrate && php naluz serve              # http://127.0.0.1:8000
+
+# …or work directly in the clone:  cp .env.example .env && php naluz key:generate --jwt && touch storage/database.sqlite
 ```
 
 Requirements: PHP ≥ 8.2 with `pdo`, `mbstring`, `openssl`, `sodium` (plus `pdo_sqlite`, `pdo_mysql` or `pdo_pgsql`).
@@ -134,15 +135,47 @@ $data = Validator::make(Request::input($request), [
 Session guard (`Naluz\Auth\Auth`, middleware `auth`) for web apps; stateless HS256 **JWT** (`Naluz\Security\Jwt`,
 middleware `jwt`) for APIs.
 
+### Templates (`resources/views/*.naluz.php`)
+
+```
+@extends('layouts/app')
+@section('content')
+    <h1>{{ $post->title }}</h1>                 {{-- escaped automatically; {!! $html !!} for raw --}}
+    @forelse ($post->comments as $c) <p>{{ $c->body }}</p> @empty <p>No comments.</p> @endforelse
+    <form method="POST">@csrf @method('PUT') …</form>
+@endsection
+```
+
+Compiled to plain PHP and cached. See [docs/templates.md](docs/templates.md).
+
+### Queues, mail, scheduler, storage
+
+```php
+SendWelcomeEmail::dispatch($user->id);                                   // queue (sync | database | redis), encrypted payloads, retries
+$mailer->queue($mailer->message()->to($email)->subject('Hi')->text('…')); // SMTP / log / array transports
+$schedule->job(new PruneOldRecords())->dailyAt('03:00')->withoutOverlapping();   // routes/console.php + one cron line
+$path = Uploads::store($file, storage('public'), 'avatars', Uploads::IMAGES);    // content-sniffed, random name, allow-list required
+```
+
+### Factories & seeders
+
+```php
+Post::factory(5)->published()->create(['user_id' => $user->id]);
+php naluz migrate:fresh --seed
+```
+
 ### CLI
 
 | Command | |
 |---|---|
+| `new <name>` | scaffold a new project (`--name=vendor/pkg --no-install --dir=…`) |
 | `serve [--host --port]` | development server |
 | `key:generate [--jwt] [--show]` | create `APP_KEY` / `JWT_SECRET` |
-| `migrate` / `migrate:rollback [--step=N]` / `migrate:status` | migrations |
-| `make:controller / model / middleware / migration Name` | generators |
-| `route:list` | print the routing table |
+| `migrate` · `migrate:rollback [--step=N]` · `migrate:status` · `migrate:fresh [--seed]` · `db:seed` | database |
+| `make:controller / model / middleware / migration / factory / seeder / job / provider Name` | generators |
+| `queue:work` · `queue:failed` · `queue:retry <id\|all>` · `queue:flush` | queues |
+| `schedule:run` · `schedule:list` | scheduler |
+| `route:list` · `route:cache` · `route:clear` · `view:clear` | routing & caches |
 
 ## Security defaults
 
@@ -162,7 +195,11 @@ middleware `jwt`) for APIs.
 | Open redirect / header injection | validation redirects only to same-host paths; `redirect()` rejects CR/LF |
 | Info leaks | `debug=false` unless enabled; production errors are generic and logged; `X-Powered-By` removed; log-forging newlines stripped |
 | Unsafe deserialisation | file cache uses `allowed_classes => false` |
-| Path traversal | strict view-name, session-id, cache-key and generator-name allow-lists; cache files are hashed |
+| Path traversal | strict view-name, session-id, cache-key and generator-name allow-lists; storage disks reject `..`/symlink escapes; cache files are hashed |
+| Queue / job tampering | payloads are encrypted JSON (no `unserialize`) and must decode to a `Job` subclass |
+| Mail header injection | CR/LF/NUL in addresses, subjects, headers → exception before sending |
+| Malicious uploads | content-sniffed type, mandatory allow-list, extension from your list, random file name |
+| N+1 queries | lazy-load guard throws in local/testing |
 
 See [docs/security.md](docs/security.md) for details and what the framework deliberately does **not** do for you.
 
@@ -170,10 +207,11 @@ See [docs/security.md](docs/security.md) for details and what the framework deli
 
 ```bash
 composer install
-vendor/bin/phpunit            # 151 tests: unit, database, HTTP, security, console
+vendor/bin/phpunit            # ~300 tests: unit, database, HTTP, security, console, queue, mail, storage, schedule
 ```
 
-Tests run against in-memory SQLite and boot the real application, so HTTP tests exercise the whole middleware stack.
+Tests run against in-memory SQLite and boot the real application, so HTTP tests exercise the whole middleware stack;
+Redis tests start a throw-away `redis-server` (skipped if it isn't installed) and the mail tests talk to a scripted fake SMTP server.
 See [docs/testing.md](docs/testing.md).
 
 ## Documentation
@@ -181,6 +219,8 @@ See [docs/testing.md](docs/testing.md).
 - [Getting started](docs/getting-started.md)
 - [Routing, HTTP & views](docs/http.md)
 - [Database: query builder, ORM, migrations](docs/database.md)
+- [Templates](docs/templates.md) · [Queues](docs/queues.md) · [Mail](docs/mail.md) · [Scheduler](docs/scheduler.md) · [Storage & uploads](docs/storage.md)
+- [Performance](docs/performance.md) · [Building packages](docs/packages.md)
 - [Security](docs/security.md)
 - [Architecture, PSR compliance & how it compares to Laravel](docs/architecture.md)
 - [Testing](docs/testing.md)

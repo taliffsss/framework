@@ -202,6 +202,12 @@ final class MailTest extends TestCase
         (new SmtpTransport('127.0.0.1', 1, 'none', null, null, 0.3))->send($this->msg());
     }
 
+    public function testHeloNameCannotInjectSmtpCommands(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        new SmtpTransport('h', 25, 'none', null, null, 1.0, null, "evil\r\nMAIL FROM:<x@evil.test>");
+    }
+
     public function testInvalidEncryptionModeIsRejected(): void
     {
         $this->expectException(\InvalidArgumentException::class);
