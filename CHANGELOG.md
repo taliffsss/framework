@@ -3,7 +3,7 @@
 ## Unreleased
 
 #### Changed
-- `composer.json` no longer needs a `repositories` entry: `naluz/framework` (`^1.2.1`) is installed from Packagist, like any other package.
+- `composer.json` no longer needs a `repositories` entry: `naluz/framework` (`^1.2.2`) is installed from Packagist, like any other package.
 
 #### Added
 - Sample service providers (`app/Providers/AppServiceProvider`, `ObserverServiceProvider`) registered in `config/app.php`.
