@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+#### Changed
+- `composer.json` no longer needs a `repositories` entry: `naluz/framework` (`^1.2.1`) is installed from Packagist, like any other package.
+
 #### Added
 - Sample service providers (`app/Providers/AppServiceProvider`, `ObserverServiceProvider`) registered in `config/app.php`.
 - Model observers: `Model::observe()`, `#[ObservedBy]`, sample `UserObserver` / `PostObserver`, `make:observer`
