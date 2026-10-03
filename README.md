@@ -187,6 +187,7 @@ php naluz migrate:fresh --seed
 | `migrate` · `migrate:rollback [--step=N]` · `migrate:status` · `migrate:fresh [--seed]` · `db:seed` | database |
 | `make:controller / model / middleware / migration / factory / seeder / job / provider Name` | generators |
 | `queue:work` · `queue:failed` · `queue:retry <id\|all>` · `queue:flush` | queues |
+| `messaging:consume <topic>` · `messaging:declare` · `messaging:publish` · `make:subscriber` | optional event streaming (Redis Streams / RabbitMQ / Kafka) |
 | `schedule:run` · `schedule:list` | scheduler |
 | `route:list` · `route:cache` · `route:clear` · `view:clear` · `model-cache:flush` · `model-cache:prune` | routing & caches |
 

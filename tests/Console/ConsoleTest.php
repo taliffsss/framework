@@ -95,6 +95,13 @@ final class ConsoleTest extends TestCase
         $this->assertStringContainsString('public function creating(', $code);
         exec(PHP_BINARY . ' -l ' . escapeshellarg($observer), $o, $rc);
         $this->assertSame(0, $rc, 'generated observer is valid PHP');
+        $this->assertSame(0, $this->cli(['make:subscriber', 'SendReceipt'])[0]);
+        $subscriber = $this->base . '/app/Subscribers/SendReceipt.php';
+        $code = (string) file_get_contents($subscriber);
+        $this->assertStringContainsString('namespace App\\Subscribers;', $code);
+        $this->assertStringContainsString('implements \\Naluz\\Messaging\\Subscriber', $code);
+        exec(PHP_BINARY . ' -l ' . escapeshellarg($subscriber), $o, $rc);
+        $this->assertSame(0, $rc, 'generated subscriber is valid PHP');
         $this->assertSame(0, $this->cli(['make:provider', 'PaymentServiceProvider'])[0]);
         $this->assertFileExists($this->base . '/app/Providers/PaymentServiceProvider.php');
 
