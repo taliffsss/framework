@@ -3,9 +3,12 @@
 ## Unreleased
 
 #### Changed
-- `composer.json` no longer needs a `repositories` entry: `naluz/framework` (`^1.2.2`) is installed from Packagist, like any other package.
+- `composer.json` no longer needs a `repositories` entry: `naluz/framework` (`^1.3.0`) is installed from Packagist, like any other package.
 
 #### Added
+- Optional event streaming (`config/messaging.php`, `MESSAGING_*` env vars; needs `naluz/framework` ^1.3.0): Redis Streams, RabbitMQ and
+  Kafka brokers, `messaging:consume`, `make:subscriber`. Tests in `tests/Messaging`; `php-amqplib/php-amqplib` is a dev dependency
+  for the RabbitMQ driver tests.
 - Sample service providers (`app/Providers/AppServiceProvider`, `ObserverServiceProvider`) registered in `config/app.php`.
 - Model observers: `Model::observe()`, `#[ObservedBy]`, sample `UserObserver` / `PostObserver`, `make:observer`
   (needs `naluz/framework` ^1.2).
